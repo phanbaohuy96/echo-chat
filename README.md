@@ -73,25 +73,57 @@ User taps failed bubble
 
 The stable `client_message_id` is the retry/idempotency key. Reusing it for the same sender prevents duplicate remote messages.
 
-## Sync conflict and scale plan
+## Sync conflict and scale behavior
 
-Current sync is intentionally simple:
+Conversation sync now uses explicit local metadata:
 
-- Messages are immutable, so there is no edit/delete merge policy yet.
-- The server-confirmed row wins when it has the same `client_message_id` or `remote_id`.
-- SQLite reads only the latest local conversation window for the UI.
-- Remote refresh currently syncs the conversation response the backend returns, then re-reads SQLite.
+```text
+chatConversationSync
+  peer_user_id
+  latest_message_created_at  -> delta refresh cursor
+  oldest_message_created_at  -> older-history cursor
+  has_more_older
+  last_synced_at
+```
 
-Next production-oriented steps:
+```text
+Refresh selected conversation
+  |
+  |-- read latest_message_created_at -----------> SQLite
+  |
+  |-- GET /api/chat/messages -------------------> Dart Frog API
+  |      ?peer_user_id=<id>
+  |      &after_created_at=<latest cursor>
+  |
+  |-- batch upsert newer messages --------------> SQLite
+  |
+  `-- re-read local conversation ---------------> render refreshed UI
+```
 
-1. Add per-conversation sync metadata with newest and oldest remote cursors.
-2. Change refresh to delta sync: fetch only messages newer than the newest local cursor.
-3. Add history pagination: fetch older pages only when the user scrolls upward.
-4. Batch remote upserts in SQLite transactions to avoid one write round-trip per message.
-5. Add `updated_at`, `deleted_at`, and version fields before supporting edits or deletes.
-6. Add cache retention rules so very large conversations do not grow forever on-device.
+```text
+Scroll near top
+  |
+  |-- read oldest_message_created_at -----------> SQLite
+  |
+  |-- GET /api/chat/messages -------------------> Dart Frog API
+  |      ?peer_user_id=<id>
+  |      &before_created_at=<oldest cursor>
+  |      &limit=<page size>
+  |
+  |-- batch upsert older page ------------------> SQLite
+  |
+  `-- re-read local conversation ---------------> render expanded history
+```
 
-With this plan, normal refresh stays small, old history loads on demand, and conflict rules remain explicit as chat features grow.
+Conflict rules stay explicit:
+
+- `client_message_id` reconciles optimistic local sends with server-confirmed rows.
+- `remote_id` deduplicates repeated remote syncs.
+- Server-confirmed rows are canonical for `sent` messages.
+- `updated_at`, `deleted_at`, and `version` are stored for future edit/delete policy.
+- Messages are still immutable in the current UI, so no merge UI is needed yet.
+
+Normal refresh stays small because it fetches only newer messages. Older history loads on demand when the user scrolls upward, and SQLite remains the final UI source of truth.
 
 ## Layer responsibilities
 
@@ -128,7 +160,8 @@ Important `chatMessage` fields:
 - `remote_id` — server-confirmed id.
 - `client_message_id` — local idempotency and backend retry deduplication.
 - `conversation_peer_user_id` — conversation query key.
-- `sender_user_id`, `recipient_user_id`, `message`, `created_at`, `status`, `error_message`.
+- `created_at`, `updated_at`, `deleted_at`, `version` — sync and future edit/delete fields.
+- `sender_user_id`, `recipient_user_id`, `message`, `status`, `error_message`.
 
 Indexes enforce unique local `client_message_id`, unique non-null `remote_id`, and efficient conversation ordering.
 
@@ -152,7 +185,9 @@ Indexes enforce unique local `client_message_id`, unique non-null `remote_id`, a
 Chat endpoints require `Authorization: Bearer <token>`:
 
 - `GET /api/chat/users` — list peers excluding the current user.
-- `GET /api/chat/messages?peer_user_id=<id>` — fetch a direct conversation.
+- `GET /api/chat/messages?peer_user_id=<id>` — fetch the latest direct-message page.
+- `GET /api/chat/messages?peer_user_id=<id>&after_created_at=<cursor>` — delta sync newer messages.
+- `GET /api/chat/messages?peer_user_id=<id>&before_created_at=<cursor>&limit=<n>` — load older history.
 - `POST /api/chat/messages` — send a direct message with `recipient_user_id`, `client_message_id`, and `message`.
 
 See `docs/backend-api.md` for request/response examples.

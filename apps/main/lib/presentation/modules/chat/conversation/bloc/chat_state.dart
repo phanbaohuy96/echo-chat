@@ -12,6 +12,8 @@ sealed class _StateData with _$StateData {
     @Default(false) bool isLoadingMessages,
     @Default(false) bool isSending,
     @Default(false) bool isSyncing,
+    @Default(false) bool isLoadingOlder,
+    @Default(true) bool hasMoreOlder,
   }) = __StateData;
 
   factory _StateData.initial() => const _StateData();
@@ -39,6 +41,10 @@ abstract class ChatState {
   bool get isSending => data.isSending;
 
   bool get isSyncing => data.isSyncing;
+
+  bool get isLoadingOlder => data.isLoadingOlder;
+
+  bool get hasMoreOlder => data.hasMoreOlder;
 }
 
 class ChatInitial extends ChatState {

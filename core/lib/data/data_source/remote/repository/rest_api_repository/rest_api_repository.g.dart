@@ -106,9 +106,20 @@ class _RestApiRepository implements RestApiRepository {
   }
 
   @override
-  Future<dynamic> getChatMessages(String peerUserId) async {
+  Future<dynamic> getChatMessages(
+    String peerUserId,
+    String? afterCreatedAt,
+    String? beforeCreatedAt,
+    int? limit,
+  ) async {
     final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{r'peer_user_id': peerUserId};
+    final queryParameters = <String, dynamic>{
+      r'peer_user_id': peerUserId,
+      r'after_created_at': afterCreatedAt,
+      r'before_created_at': beforeCreatedAt,
+      r'limit': limit,
+    };
+    queryParameters.removeWhere((k, v) => v == null);
     final _headers = <String, dynamic>{};
     const Map<String, dynamic>? _data = null;
     final _options = _setStreamType<dynamic>(

@@ -1,16 +1,19 @@
 import 'package:data_source/data_source.dart';
 import 'package:injectable/injectable.dart';
 
+import '../../../domain/entities/chat/chat_conversation_sync.dart';
 import '../../../domain/entities/chat/local_chat_message.dart';
+import '../../data_source/local/sqlite/chat_conversation_sync_dao.dart';
 import '../../data_source/local/sqlite/chat_message_dao.dart';
 import '../../data_source/local/sqlite/chat_peer_dao.dart';
 
 @injectable
 class ChatLocalRepository {
-  ChatLocalRepository(this._peerDao, this._messageDao);
+  ChatLocalRepository(this._peerDao, this._messageDao, this._syncDao);
 
   final ChatPeerDao _peerDao;
   final ChatMessageDao _messageDao;
+  final ChatConversationSyncDao _syncDao;
 
   Future<List<UserModel>> getCachedPeers() => _peerDao.getPeers();
 
@@ -18,8 +21,35 @@ class ChatLocalRepository {
 
   Future<UserModel?> getCachedPeer(String userId) => _peerDao.getPeer(userId);
 
-  Future<List<LocalChatMessage>> getCachedConversation(String peerUserId) {
-    return _messageDao.getConversation(peerUserId);
+  Future<List<LocalChatMessage>> getCachedConversation(
+    String peerUserId, {
+    int limit = 80,
+  }) {
+    return _messageDao.getConversation(peerUserId, limit: limit);
+  }
+
+  Future<List<LocalChatMessage>> getOlderConversationPage(
+    String peerUserId, {
+    required DateTime beforeCreatedAt,
+    int limit = 50,
+  }) {
+    return _messageDao.getOlderConversationPage(
+      peerUserId,
+      beforeCreatedAt: beforeCreatedAt,
+      limit: limit,
+    );
+  }
+
+  Future<ChatConversationSync?> getConversationSync(String peerUserId) {
+    return _syncDao.getSync(peerUserId);
+  }
+
+  Future<DateTime?> getNewestMessageCreatedAt(String peerUserId) {
+    return _messageDao.getNewestCreatedAt(peerUserId);
+  }
+
+  Future<DateTime?> getOldestMessageCreatedAt(String peerUserId) {
+    return _messageDao.getOldestCreatedAt(peerUserId);
   }
 
   Future<LocalChatMessage> enqueueMessage({
@@ -41,6 +71,7 @@ class ChatLocalRepository {
   Future<void> cacheRemoteConversation({
     required UserModel peer,
     required List<ChatMessageDto> messages,
+    required ChatConversationSyncMetadataDto syncMetadata,
     required String currentUserId,
   }) async {
     await _peerDao.upsertPeers([peer]);
@@ -48,17 +79,37 @@ class ChatLocalRepository {
       messages,
       currentUserId: currentUserId,
     );
+    final peerUserId = peer.id;
+    if (peerUserId != null) {
+      await _syncDao.updateFromRemote(
+        peerUserId: peerUserId,
+        metadata: syncMetadata,
+        fallbackLatestCreatedAt: messages.isEmpty
+            ? null
+            : messages.last.createdAt,
+        fallbackOldestCreatedAt: messages.isEmpty
+            ? null
+            : messages.first.createdAt,
+      );
+    }
   }
 
   Future<void> markSent({
     required String clientMessageId,
     required ChatMessageDto remoteMessage,
     required String currentUserId,
-  }) {
-    return _messageDao.markSent(
+  }) async {
+    await _messageDao.markSent(
       clientMessageId: clientMessageId,
       remoteMessage: remoteMessage,
       currentUserId: currentUserId,
+    );
+    final peerUserId = remoteMessage.senderUserId == currentUserId
+        ? remoteMessage.recipientUserId
+        : remoteMessage.senderUserId;
+    await _syncDao.updateAfterLocalSent(
+      peerUserId: peerUserId,
+      createdAt: remoteMessage.createdAt,
     );
   }
 

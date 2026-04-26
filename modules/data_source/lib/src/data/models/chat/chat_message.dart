@@ -11,6 +11,9 @@ class ChatMessageDto {
     required this.clientMessageId,
     required this.message,
     required this.createdAt,
+    this.updatedAt,
+    this.deletedAt,
+    this.version = 1,
   });
 
   final String id;
@@ -28,6 +31,14 @@ class ChatMessageDto {
 
   @JsonKey(name: 'created_at')
   final DateTime createdAt;
+
+  @JsonKey(name: 'updated_at')
+  final DateTime? updatedAt;
+
+  @JsonKey(name: 'deleted_at')
+  final DateTime? deletedAt;
+
+  final int version;
 
   factory ChatMessageDto.fromJson(Map<String, dynamic> json) =>
       _$ChatMessageDtoFromJson(json);

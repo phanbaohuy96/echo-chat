@@ -1,12 +1,25 @@
 part of 'chat_screen.dart';
 
 extension ChatAction on _ChatScreenState {
+  void _onScroll() {
+    if (!_scrollController.hasClients) {
+      return;
+    }
+    if (_scrollController.offset <= 80) {
+      bloc.add(ChatOlderMessagesRequestedEvent());
+    }
+  }
+
   void _blocListener(BuildContext context, ChatState state) {
     if (state.messages.length == _lastMessageCount) {
       return;
     }
+    final addedToTop =
+        state.messages.length > _lastMessageCount && state.isLoadingOlder;
     _lastMessageCount = state.messages.length;
-    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+    if (!addedToTop) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+    }
   }
 
   void _refreshConversation() {

@@ -127,7 +127,13 @@ Errors:
 
 ### `GET /api/chat/messages?peer_user_id=<id>`
 
-Returns the remote-first direct-message conversation with a peer.
+Returns a page of direct messages with a peer plus sync metadata. Without a cursor, the endpoint returns the latest page.
+
+Optional query parameters:
+
+- `after_created_at` — ISO timestamp or epoch milliseconds; returns messages newer than this cursor for delta refresh.
+- `before_created_at` — ISO timestamp or epoch milliseconds; returns the older page before this cursor.
+- `limit` — page size, clamped by the backend.
 
 Response `200`:
 
@@ -145,9 +151,17 @@ Response `200`:
       "recipient_user_id": "user_2",
       "client_message_id": "client_1",
       "message": "Hello",
-      "created_at": "2026-04-25T10:30:00.000Z"
+      "created_at": "2026-04-25T10:30:00.000Z",
+      "updated_at": null,
+      "deleted_at": null,
+      "version": 1
     }
-  ]
+  ],
+  "sync_metadata": {
+    "latest_message_created_at": "2026-04-25T10:30:00.000Z",
+    "oldest_message_created_at": "2026-04-25T10:30:00.000Z",
+    "has_more_older": false
+  }
 }
 ```
 
@@ -181,7 +195,10 @@ Response `200`:
     "recipient_user_id": "user_2",
     "client_message_id": "client_1",
     "message": "Hello",
-    "created_at": "2026-04-25T10:30:00.000Z"
+    "created_at": "2026-04-25T10:30:00.000Z",
+    "updated_at": null,
+    "deleted_at": null,
+    "version": 1
   }
 }
 ```

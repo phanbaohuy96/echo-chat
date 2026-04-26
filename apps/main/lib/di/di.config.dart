@@ -22,6 +22,8 @@ import '../data/data_source/datasource_module.dart' as _i737;
 import '../data/data_source/local/local_data_manager.dart' as _i655;
 import '../data/data_source/local/preferences_helper/preferences_helper.dart'
     as _i212;
+import '../data/data_source/local/sqlite/chat_conversation_sync_dao.dart'
+    as _i1066;
 import '../data/data_source/local/sqlite/chat_message_dao.dart' as _i817;
 import '../data/data_source/local/sqlite/chat_peer_dao.dart' as _i377;
 import '../data/data_source/local/sqlite/sqlite_database.impl.dart' as _i833;
@@ -56,6 +58,9 @@ Future<_i174.GetIt> $initGetIt(
       gh<_i494.CorePreferencesHelper>(),
     ),
   );
+  gh.factory<_i1066.ChatConversationSyncDao>(
+    () => _i1066.ChatConversationSyncDao(gh<_i494.SQLiteDatabase>()),
+  );
   gh.factory<_i817.ChatMessageDao>(
     () => _i817.ChatMessageDao(gh<_i494.SQLiteDatabase>()),
   );
@@ -81,6 +86,7 @@ Future<_i174.GetIt> $initGetIt(
     () => _i366.ChatLocalRepository(
       gh<_i377.ChatPeerDao>(),
       gh<_i817.ChatMessageDao>(),
+      gh<_i1066.ChatConversationSyncDao>(),
     ),
   );
   gh.factory<_i834.ChatUsecase>(

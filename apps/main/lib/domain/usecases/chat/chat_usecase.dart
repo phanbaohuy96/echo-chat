@@ -13,9 +13,17 @@ abstract class ChatUsecase {
 
   Future<List<UserModel>> syncPeers();
 
-  Future<List<LocalChatMessage>> getCachedConversation(String peerUserId);
+  Future<List<LocalChatMessage>> getCachedConversation(
+    String peerUserId, {
+    int limit,
+  });
 
-  Future<List<LocalChatMessage>> syncConversation(String peerUserId);
+  Future<List<LocalChatMessage>> refreshConversation(String peerUserId);
+
+  Future<({List<LocalChatMessage> messages, bool hasMoreOlder})>
+  loadOlderMessages(String peerUserId);
+
+  Future<bool> hasMoreOlderMessages(String peerUserId);
 
   Future<LocalChatMessage> enqueueMessage({
     required String recipientUserId,

@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$StateData {
 
- List<UserModel> get peers; UserModel? get selectedPeer; List<ChatMessage> get messages; bool get isLoadingPeers; bool get isLoadingMessages; bool get isSending; bool get isSyncing;
+ List<UserModel> get peers; UserModel? get selectedPeer; List<ChatMessage> get messages; bool get isLoadingPeers; bool get isLoadingMessages; bool get isSending; bool get isSyncing; bool get isLoadingOlder; bool get hasMoreOlder;
 /// Create a copy of _StateData
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ _$StateDataCopyWith<_StateData> get copyWith => __$StateDataCopyWithImpl<_StateD
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StateData&&const DeepCollectionEquality().equals(other.peers, peers)&&(identical(other.selectedPeer, selectedPeer) || other.selectedPeer == selectedPeer)&&const DeepCollectionEquality().equals(other.messages, messages)&&(identical(other.isLoadingPeers, isLoadingPeers) || other.isLoadingPeers == isLoadingPeers)&&(identical(other.isLoadingMessages, isLoadingMessages) || other.isLoadingMessages == isLoadingMessages)&&(identical(other.isSending, isSending) || other.isSending == isSending)&&(identical(other.isSyncing, isSyncing) || other.isSyncing == isSyncing));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _StateData&&const DeepCollectionEquality().equals(other.peers, peers)&&(identical(other.selectedPeer, selectedPeer) || other.selectedPeer == selectedPeer)&&const DeepCollectionEquality().equals(other.messages, messages)&&(identical(other.isLoadingPeers, isLoadingPeers) || other.isLoadingPeers == isLoadingPeers)&&(identical(other.isLoadingMessages, isLoadingMessages) || other.isLoadingMessages == isLoadingMessages)&&(identical(other.isSending, isSending) || other.isSending == isSending)&&(identical(other.isSyncing, isSyncing) || other.isSyncing == isSyncing)&&(identical(other.isLoadingOlder, isLoadingOlder) || other.isLoadingOlder == isLoadingOlder)&&(identical(other.hasMoreOlder, hasMoreOlder) || other.hasMoreOlder == hasMoreOlder));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(peers),selectedPeer,const DeepCollectionEquality().hash(messages),isLoadingPeers,isLoadingMessages,isSending,isSyncing);
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(peers),selectedPeer,const DeepCollectionEquality().hash(messages),isLoadingPeers,isLoadingMessages,isSending,isSyncing,isLoadingOlder,hasMoreOlder);
 
 @override
 String toString() {
-  return '_StateData(peers: $peers, selectedPeer: $selectedPeer, messages: $messages, isLoadingPeers: $isLoadingPeers, isLoadingMessages: $isLoadingMessages, isSending: $isSending, isSyncing: $isSyncing)';
+  return '_StateData(peers: $peers, selectedPeer: $selectedPeer, messages: $messages, isLoadingPeers: $isLoadingPeers, isLoadingMessages: $isLoadingMessages, isSending: $isSending, isSyncing: $isSyncing, isLoadingOlder: $isLoadingOlder, hasMoreOlder: $hasMoreOlder)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class _$StateDataCopyWith<$Res>  {
   factory _$StateDataCopyWith(_StateData value, $Res Function(_StateData) _then) = __$StateDataCopyWithImpl;
 @useResult
 $Res call({
- List<UserModel> peers, UserModel? selectedPeer, List<ChatMessage> messages, bool isLoadingPeers, bool isLoadingMessages, bool isSending, bool isSyncing
+ List<UserModel> peers, UserModel? selectedPeer, List<ChatMessage> messages, bool isLoadingPeers, bool isLoadingMessages, bool isSending, bool isSyncing, bool isLoadingOlder, bool hasMoreOlder
 });
 
 
@@ -62,7 +62,7 @@ class __$StateDataCopyWithImpl<$Res>
 
 /// Create a copy of _StateData
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? peers = null,Object? selectedPeer = freezed,Object? messages = null,Object? isLoadingPeers = null,Object? isLoadingMessages = null,Object? isSending = null,Object? isSyncing = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? peers = null,Object? selectedPeer = freezed,Object? messages = null,Object? isLoadingPeers = null,Object? isLoadingMessages = null,Object? isSending = null,Object? isSyncing = null,Object? isLoadingOlder = null,Object? hasMoreOlder = null,}) {
   return _then(_self.copyWith(
 peers: null == peers ? _self.peers : peers // ignore: cast_nullable_to_non_nullable
 as List<UserModel>,selectedPeer: freezed == selectedPeer ? _self.selectedPeer : selectedPeer // ignore: cast_nullable_to_non_nullable
@@ -71,6 +71,8 @@ as List<ChatMessage>,isLoadingPeers: null == isLoadingPeers ? _self.isLoadingPee
 as bool,isLoadingMessages: null == isLoadingMessages ? _self.isLoadingMessages : isLoadingMessages // ignore: cast_nullable_to_non_nullable
 as bool,isSending: null == isSending ? _self.isSending : isSending // ignore: cast_nullable_to_non_nullable
 as bool,isSyncing: null == isSyncing ? _self.isSyncing : isSyncing // ignore: cast_nullable_to_non_nullable
+as bool,isLoadingOlder: null == isLoadingOlder ? _self.isLoadingOlder : isLoadingOlder // ignore: cast_nullable_to_non_nullable
+as bool,hasMoreOlder: null == hasMoreOlder ? _self.hasMoreOlder : hasMoreOlder // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }
@@ -153,10 +155,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<UserModel> peers,  UserModel? selectedPeer,  List<ChatMessage> messages,  bool isLoadingPeers,  bool isLoadingMessages,  bool isSending,  bool isSyncing)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<UserModel> peers,  UserModel? selectedPeer,  List<ChatMessage> messages,  bool isLoadingPeers,  bool isLoadingMessages,  bool isSending,  bool isSyncing,  bool isLoadingOlder,  bool hasMoreOlder)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case __StateData() when $default != null:
-return $default(_that.peers,_that.selectedPeer,_that.messages,_that.isLoadingPeers,_that.isLoadingMessages,_that.isSending,_that.isSyncing);case _:
+return $default(_that.peers,_that.selectedPeer,_that.messages,_that.isLoadingPeers,_that.isLoadingMessages,_that.isSending,_that.isSyncing,_that.isLoadingOlder,_that.hasMoreOlder);case _:
   return orElse();
 
 }
@@ -174,10 +176,10 @@ return $default(_that.peers,_that.selectedPeer,_that.messages,_that.isLoadingPee
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<UserModel> peers,  UserModel? selectedPeer,  List<ChatMessage> messages,  bool isLoadingPeers,  bool isLoadingMessages,  bool isSending,  bool isSyncing)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<UserModel> peers,  UserModel? selectedPeer,  List<ChatMessage> messages,  bool isLoadingPeers,  bool isLoadingMessages,  bool isSending,  bool isSyncing,  bool isLoadingOlder,  bool hasMoreOlder)  $default,) {final _that = this;
 switch (_that) {
 case __StateData():
-return $default(_that.peers,_that.selectedPeer,_that.messages,_that.isLoadingPeers,_that.isLoadingMessages,_that.isSending,_that.isSyncing);}
+return $default(_that.peers,_that.selectedPeer,_that.messages,_that.isLoadingPeers,_that.isLoadingMessages,_that.isSending,_that.isSyncing,_that.isLoadingOlder,_that.hasMoreOlder);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -191,10 +193,10 @@ return $default(_that.peers,_that.selectedPeer,_that.messages,_that.isLoadingPee
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<UserModel> peers,  UserModel? selectedPeer,  List<ChatMessage> messages,  bool isLoadingPeers,  bool isLoadingMessages,  bool isSending,  bool isSyncing)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<UserModel> peers,  UserModel? selectedPeer,  List<ChatMessage> messages,  bool isLoadingPeers,  bool isLoadingMessages,  bool isSending,  bool isSyncing,  bool isLoadingOlder,  bool hasMoreOlder)?  $default,) {final _that = this;
 switch (_that) {
 case __StateData() when $default != null:
-return $default(_that.peers,_that.selectedPeer,_that.messages,_that.isLoadingPeers,_that.isLoadingMessages,_that.isSending,_that.isSyncing);case _:
+return $default(_that.peers,_that.selectedPeer,_that.messages,_that.isLoadingPeers,_that.isLoadingMessages,_that.isSending,_that.isSyncing,_that.isLoadingOlder,_that.hasMoreOlder);case _:
   return null;
 
 }
@@ -206,7 +208,7 @@ return $default(_that.peers,_that.selectedPeer,_that.messages,_that.isLoadingPee
 
 
 class __StateData implements _StateData {
-  const __StateData({final  List<UserModel> peers = const [], this.selectedPeer, final  List<ChatMessage> messages = const [], this.isLoadingPeers = false, this.isLoadingMessages = false, this.isSending = false, this.isSyncing = false}): _peers = peers,_messages = messages;
+  const __StateData({final  List<UserModel> peers = const [], this.selectedPeer, final  List<ChatMessage> messages = const [], this.isLoadingPeers = false, this.isLoadingMessages = false, this.isSending = false, this.isSyncing = false, this.isLoadingOlder = false, this.hasMoreOlder = true}): _peers = peers,_messages = messages;
   
 
  final  List<UserModel> _peers;
@@ -228,6 +230,8 @@ class __StateData implements _StateData {
 @override@JsonKey() final  bool isLoadingMessages;
 @override@JsonKey() final  bool isSending;
 @override@JsonKey() final  bool isSyncing;
+@override@JsonKey() final  bool isLoadingOlder;
+@override@JsonKey() final  bool hasMoreOlder;
 
 /// Create a copy of _StateData
 /// with the given fields replaced by the non-null parameter values.
@@ -239,16 +243,16 @@ _$_StateDataCopyWith<__StateData> get copyWith => __$_StateDataCopyWithImpl<__St
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is __StateData&&const DeepCollectionEquality().equals(other._peers, _peers)&&(identical(other.selectedPeer, selectedPeer) || other.selectedPeer == selectedPeer)&&const DeepCollectionEquality().equals(other._messages, _messages)&&(identical(other.isLoadingPeers, isLoadingPeers) || other.isLoadingPeers == isLoadingPeers)&&(identical(other.isLoadingMessages, isLoadingMessages) || other.isLoadingMessages == isLoadingMessages)&&(identical(other.isSending, isSending) || other.isSending == isSending)&&(identical(other.isSyncing, isSyncing) || other.isSyncing == isSyncing));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is __StateData&&const DeepCollectionEquality().equals(other._peers, _peers)&&(identical(other.selectedPeer, selectedPeer) || other.selectedPeer == selectedPeer)&&const DeepCollectionEquality().equals(other._messages, _messages)&&(identical(other.isLoadingPeers, isLoadingPeers) || other.isLoadingPeers == isLoadingPeers)&&(identical(other.isLoadingMessages, isLoadingMessages) || other.isLoadingMessages == isLoadingMessages)&&(identical(other.isSending, isSending) || other.isSending == isSending)&&(identical(other.isSyncing, isSyncing) || other.isSyncing == isSyncing)&&(identical(other.isLoadingOlder, isLoadingOlder) || other.isLoadingOlder == isLoadingOlder)&&(identical(other.hasMoreOlder, hasMoreOlder) || other.hasMoreOlder == hasMoreOlder));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_peers),selectedPeer,const DeepCollectionEquality().hash(_messages),isLoadingPeers,isLoadingMessages,isSending,isSyncing);
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_peers),selectedPeer,const DeepCollectionEquality().hash(_messages),isLoadingPeers,isLoadingMessages,isSending,isSyncing,isLoadingOlder,hasMoreOlder);
 
 @override
 String toString() {
-  return '_StateData(peers: $peers, selectedPeer: $selectedPeer, messages: $messages, isLoadingPeers: $isLoadingPeers, isLoadingMessages: $isLoadingMessages, isSending: $isSending, isSyncing: $isSyncing)';
+  return '_StateData(peers: $peers, selectedPeer: $selectedPeer, messages: $messages, isLoadingPeers: $isLoadingPeers, isLoadingMessages: $isLoadingMessages, isSending: $isSending, isSyncing: $isSyncing, isLoadingOlder: $isLoadingOlder, hasMoreOlder: $hasMoreOlder)';
 }
 
 
@@ -259,7 +263,7 @@ abstract mixin class _$_StateDataCopyWith<$Res> implements _$StateDataCopyWith<$
   factory _$_StateDataCopyWith(__StateData value, $Res Function(__StateData) _then) = __$_StateDataCopyWithImpl;
 @override @useResult
 $Res call({
- List<UserModel> peers, UserModel? selectedPeer, List<ChatMessage> messages, bool isLoadingPeers, bool isLoadingMessages, bool isSending, bool isSyncing
+ List<UserModel> peers, UserModel? selectedPeer, List<ChatMessage> messages, bool isLoadingPeers, bool isLoadingMessages, bool isSending, bool isSyncing, bool isLoadingOlder, bool hasMoreOlder
 });
 
 
@@ -276,7 +280,7 @@ class __$_StateDataCopyWithImpl<$Res>
 
 /// Create a copy of _StateData
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? peers = null,Object? selectedPeer = freezed,Object? messages = null,Object? isLoadingPeers = null,Object? isLoadingMessages = null,Object? isSending = null,Object? isSyncing = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? peers = null,Object? selectedPeer = freezed,Object? messages = null,Object? isLoadingPeers = null,Object? isLoadingMessages = null,Object? isSending = null,Object? isSyncing = null,Object? isLoadingOlder = null,Object? hasMoreOlder = null,}) {
   return _then(__StateData(
 peers: null == peers ? _self._peers : peers // ignore: cast_nullable_to_non_nullable
 as List<UserModel>,selectedPeer: freezed == selectedPeer ? _self.selectedPeer : selectedPeer // ignore: cast_nullable_to_non_nullable
@@ -285,6 +289,8 @@ as List<ChatMessage>,isLoadingPeers: null == isLoadingPeers ? _self.isLoadingPee
 as bool,isLoadingMessages: null == isLoadingMessages ? _self.isLoadingMessages : isLoadingMessages // ignore: cast_nullable_to_non_nullable
 as bool,isSending: null == isSending ? _self.isSending : isSending // ignore: cast_nullable_to_non_nullable
 as bool,isSyncing: null == isSyncing ? _self.isSyncing : isSyncing // ignore: cast_nullable_to_non_nullable
+as bool,isLoadingOlder: null == isLoadingOlder ? _self.isLoadingOlder : isLoadingOlder // ignore: cast_nullable_to_non_nullable
+as bool,hasMoreOlder: null == hasMoreOlder ? _self.hasMoreOlder : hasMoreOlder // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }

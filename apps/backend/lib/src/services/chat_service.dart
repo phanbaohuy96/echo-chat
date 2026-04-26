@@ -4,6 +4,32 @@ import '../models/chat_message.dart';
 import '../models/user.dart';
 import '../store/demo_store.dart';
 
+class ChatConversationResult {
+  const ChatConversationResult({
+    required this.peer,
+    required this.messages,
+    required this.latestMessageCreatedAt,
+    required this.oldestMessageCreatedAt,
+    required this.hasMoreOlder,
+  });
+
+  final BackendUser peer;
+  final List<BackendChatMessage> messages;
+  final DateTime? latestMessageCreatedAt;
+  final DateTime? oldestMessageCreatedAt;
+  final bool hasMoreOlder;
+
+  Map<String, dynamic> get syncMetadata => {
+    'latest_message_created_at': latestMessageCreatedAt
+        ?.toUtc()
+        .toIso8601String(),
+    'oldest_message_created_at': oldestMessageCreatedAt
+        ?.toUtc()
+        .toIso8601String(),
+    'has_more_older': hasMoreOlder,
+  };
+}
+
 class ChatException implements Exception {
   const ChatException(this.statusCode, this.message);
 
@@ -14,7 +40,8 @@ class ChatException implements Exception {
 class ChatService {
   ChatService(this._store);
 
-  static const _maxMessagesPerConversation = 80;
+  static const _defaultConversationLimit = 50;
+  static const _maxConversationLimit = 100;
 
   final DemoStore _store;
   final _uuid = const Uuid();
@@ -24,18 +51,45 @@ class ChatService {
       ..sort((a, b) => a.username.compareTo(b.username));
   }
 
-  ({BackendUser peer, List<BackendChatMessage> messages}) getConversation({
+  ChatConversationResult getConversation({
     required BackendUser user,
     required String peerUserId,
+    DateTime? afterCreatedAt,
+    DateTime? beforeCreatedAt,
+    int? limit,
   }) {
     final peer = _getPeer(user: user, peerUserId: peerUserId);
-    final messageIds =
-        _store.messageIdsByConversationKey[_conversationKey(user.id, peer.id)];
-    final messages = (messageIds ?? [])
-        .map((id) => _store.messagesById[id])
-        .nonNulls
-        .toList();
-    return (peer: peer, messages: messages);
+    final conversationMessages = _conversationMessages(user.id, peer.id);
+    final pageLimit = _normalizeLimit(limit);
+    final messages = switch ((afterCreatedAt, beforeCreatedAt)) {
+      (final after?, _) =>
+        conversationMessages
+            .where((message) => message.createdAt.isAfter(after))
+            .take(pageLimit)
+            .toList(),
+      (null, final before?) => _latestPage(
+        conversationMessages
+            .where((message) => message.createdAt.isBefore(before))
+            .toList(),
+        pageLimit,
+      ),
+      _ => _latestPage(conversationMessages, pageLimit),
+    };
+    final oldestReturned = messages.isEmpty ? null : messages.first.createdAt;
+    final hasMoreOlder =
+        oldestReturned != null &&
+        conversationMessages.any(
+          (message) => message.createdAt.isBefore(oldestReturned),
+        );
+    return ChatConversationResult(
+      peer: peer,
+      messages: messages,
+      latestMessageCreatedAt: messages.isEmpty ? null : messages.last.createdAt,
+      oldestMessageCreatedAt: messages.isEmpty
+          ? null
+          : messages.first.createdAt,
+      hasMoreOlder: hasMoreOlder,
+    );
   }
 
   BackendChatMessage sendMessage({
@@ -76,28 +130,42 @@ class ChatService {
     final conversationMessageIds = _store.messageIdsByConversationKey
         .putIfAbsent(_conversationKey(sender.id, recipient.id), () => []);
     conversationMessageIds.add(chatMessage.id);
-    if (conversationMessageIds.length > _maxMessagesPerConversation) {
-      final removedIds = conversationMessageIds.sublist(
-        0,
-        conversationMessageIds.length - _maxMessagesPerConversation,
-      );
-      conversationMessageIds.removeRange(
-        0,
-        conversationMessageIds.length - _maxMessagesPerConversation,
-      );
-      for (final removedId in removedIds) {
-        final removedMessage = _store.messagesById.remove(removedId);
-        if (removedMessage != null) {
-          _store.messageIdBySenderAndClientMessageId.remove(
-            _idempotencyKey(
-              removedMessage.senderUserId,
-              removedMessage.clientMessageId,
-            ),
-          );
-        }
-      }
-    }
     return chatMessage;
+  }
+
+  List<BackendChatMessage> _conversationMessages(
+    String firstUserId,
+    String secondUserId,
+  ) {
+    final messageIds =
+        _store.messageIdsByConversationKey[_conversationKey(
+          firstUserId,
+          secondUserId,
+        )];
+    return (messageIds ?? [])
+        .map((id) => _store.messagesById[id])
+        .nonNulls
+        .toList();
+  }
+
+  List<BackendChatMessage> _latestPage(
+    List<BackendChatMessage> messages,
+    int limit,
+  ) {
+    if (messages.length <= limit) {
+      return messages;
+    }
+    return messages.sublist(messages.length - limit);
+  }
+
+  int _normalizeLimit(int? limit) {
+    if (limit == null || limit <= 0) {
+      return _defaultConversationLimit;
+    }
+    if (limit > _maxConversationLimit) {
+      return _maxConversationLimit;
+    }
+    return limit;
   }
 
   BackendUser _getPeer({

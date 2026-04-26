@@ -6,6 +6,9 @@ class BackendChatMessage {
     required this.clientMessageId,
     required this.message,
     required this.createdAt,
+    this.updatedAt,
+    this.deletedAt,
+    this.version = 1,
   });
 
   final String id;
@@ -14,6 +17,9 @@ class BackendChatMessage {
   final String clientMessageId;
   final String message;
   final DateTime createdAt;
+  final DateTime? updatedAt;
+  final DateTime? deletedAt;
+  final int version;
 
   Map<String, dynamic> toJson() {
     return {
@@ -23,6 +29,9 @@ class BackendChatMessage {
       'client_message_id': clientMessageId,
       'message': message,
       'created_at': createdAt.toUtc().toIso8601String(),
+      'updated_at': updatedAt?.toUtc().toIso8601String(),
+      'deleted_at': deletedAt?.toUtc().toIso8601String(),
+      'version': version,
     };
   }
 }

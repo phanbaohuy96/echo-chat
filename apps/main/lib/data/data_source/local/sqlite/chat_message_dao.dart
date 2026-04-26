@@ -17,6 +17,9 @@ class ChatMessageDao extends DAO {
   static const recipientUserId = 'recipient_user_id';
   static const message = 'message';
   static const createdAt = 'created_at';
+  static const updatedAt = 'updated_at';
+  static const deletedAt = 'deleted_at';
+  static const version = 'version';
   static const status = 'status';
   static const errorMessage = 'error_message';
 
@@ -34,6 +37,9 @@ class ChatMessageDao extends DAO {
       $recipientUserId TEXT NOT NULL,
       $message TEXT NOT NULL,
       $createdAt INTEGER NOT NULL,
+      $updatedAt INTEGER,
+      $deletedAt INTEGER,
+      $version INTEGER NOT NULL DEFAULT 1,
       $status TEXT NOT NULL,
       $errorMessage TEXT
     )
@@ -80,6 +86,9 @@ class ChatMessageDao extends DAO {
     DataColumn(name: recipientUserId, type: DataType.text, notNull: true),
     DataColumn(name: message, type: DataType.text, notNull: true),
     DataColumn(name: createdAt, type: DataType.int, notNull: true),
+    DataColumn(name: updatedAt, type: DataType.int),
+    DataColumn(name: deletedAt, type: DataType.int),
+    DataColumn(name: version, type: DataType.int, notNull: true),
     DataColumn(name: status, type: DataType.text, notNull: true),
     DataColumn(name: errorMessage, type: DataType.text),
   ];
@@ -100,6 +109,9 @@ class ChatMessageDao extends DAO {
       ChatMessageDao.recipientUserId: recipientUserId,
       ChatMessageDao.message: message,
       ChatMessageDao.createdAt: createdAt.millisecondsSinceEpoch,
+      updatedAt: null,
+      deletedAt: null,
+      version: 1,
       status: ChatMessageStatus.pending.name,
       errorMessage: null,
     };
@@ -117,10 +129,24 @@ class ChatMessageDao extends DAO {
     List<ChatMessageDto> messages, {
     required String currentUserId,
   }) async {
+    if (messages.isEmpty) {
+      return;
+    }
     await execute(() async {
+      final batch = db.database.batch();
       for (final remoteMessage in messages) {
-        await _upsertRemoteMessage(remoteMessage, currentUserId: currentUserId);
+        batch.insert(
+          tableName,
+          _toRow(
+            LocalChatMessage.fromRemote(
+              remoteMessage,
+              currentUserId: currentUserId,
+            ),
+          ),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
       }
+      await batch.commit(noResult: true);
     });
   }
 
@@ -176,6 +202,57 @@ class ChatMessageDao extends DAO {
       ),
     );
     return rows.reversed.map(_fromRow).toList();
+  }
+
+  Future<List<LocalChatMessage>> getOlderConversationPage(
+    String peerUserId, {
+    required DateTime beforeCreatedAt,
+    int limit = 50,
+  }) async {
+    final rows = await execute(
+      () => db.query(
+        tableName,
+        where: '$conversationPeerUserId = ? AND $createdAt < ?',
+        whereArgs: [peerUserId, beforeCreatedAt.millisecondsSinceEpoch],
+        orderBy: '$createdAt DESC, $localId DESC',
+        limit: limit,
+      ),
+    );
+    return rows.reversed.map(_fromRow).toList();
+  }
+
+  Future<DateTime?> getNewestCreatedAt(String peerUserId) async {
+    final rows = await execute(
+      () => db.query(
+        tableName,
+        columns: [createdAt],
+        where: '$conversationPeerUserId = ?',
+        whereArgs: [peerUserId],
+        orderBy: '$createdAt DESC, $localId DESC',
+        limit: 1,
+      ),
+    );
+    if (rows.isEmpty) {
+      return null;
+    }
+    return DateTime.fromMillisecondsSinceEpoch(rows.first[createdAt] as int);
+  }
+
+  Future<DateTime?> getOldestCreatedAt(String peerUserId) async {
+    final rows = await execute(
+      () => db.query(
+        tableName,
+        columns: [createdAt],
+        where: '$conversationPeerUserId = ?',
+        whereArgs: [peerUserId],
+        orderBy: '$createdAt ASC, $localId ASC',
+        limit: 1,
+      ),
+    );
+    if (rows.isEmpty) {
+      return null;
+    }
+    return DateTime.fromMillisecondsSinceEpoch(rows.first[createdAt] as int);
   }
 
   Future<LocalChatMessage?> getMessage(String clientMessageId) async {
@@ -236,9 +313,19 @@ class ChatMessageDao extends DAO {
       recipientUserId: message.recipientUserId,
       ChatMessageDao.message: message.message,
       createdAt: message.createdAt.millisecondsSinceEpoch,
+      updatedAt: message.updatedAt?.millisecondsSinceEpoch,
+      deletedAt: message.deletedAt?.millisecondsSinceEpoch,
+      version: message.version,
       status: message.status.name,
       errorMessage: message.errorMessage,
     }..removeWhere((key, value) => key == localId && value == null);
+  }
+
+  DateTime? _fromMilliseconds(Object? value) {
+    if (value == null) {
+      return null;
+    }
+    return DateTime.fromMillisecondsSinceEpoch(value as int);
   }
 
   LocalChatMessage _fromRow(Map<String, Object?> row) {
@@ -251,6 +338,9 @@ class ChatMessageDao extends DAO {
       recipientUserId: row[recipientUserId] as String,
       message: row[message] as String,
       createdAt: DateTime.fromMillisecondsSinceEpoch(row[createdAt] as int),
+      updatedAt: _fromMilliseconds(row[updatedAt]),
+      deletedAt: _fromMilliseconds(row[deletedAt]),
+      version: (row[version] as int?) ?? 1,
       status: ChatMessageStatus.values.byName(row[status] as String),
       errorMessage: row[errorMessage] as String?,
     );

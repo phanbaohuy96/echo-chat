@@ -17,14 +17,19 @@ Future<Response> _getConversation(RequestContext context) async {
     final user = authService.authenticate(
       context.request.headers['authorization'],
     );
+    final query = context.request.uri.queryParameters;
     final result = chatService.getConversation(
       user: user,
-      peerUserId: context.request.uri.queryParameters['peer_user_id'] ?? '',
+      peerUserId: query['peer_user_id'] ?? '',
+      afterCreatedAt: _parseDateTime(query['after_created_at']),
+      beforeCreatedAt: _parseDateTime(query['before_created_at']),
+      limit: int.tryParse(query['limit'] ?? ''),
     );
     return Response.json(
       body: {
         'peer': result.peer.toPublicJson(),
         'messages': result.messages.map((message) => message.toJson()).toList(),
+        'sync_metadata': result.syncMetadata,
       },
     );
   } on AuthException catch (error) {
@@ -32,6 +37,17 @@ Future<Response> _getConversation(RequestContext context) async {
   } on ChatException catch (error) {
     return errorJson(error.statusCode, error.message);
   }
+}
+
+DateTime? _parseDateTime(String? value) {
+  if (value == null || value.isEmpty) {
+    return null;
+  }
+  final milliseconds = int.tryParse(value);
+  if (milliseconds != null) {
+    return DateTime.fromMillisecondsSinceEpoch(milliseconds, isUtc: true);
+  }
+  return DateTime.tryParse(value)?.toUtc();
 }
 
 Future<Response> _sendMessage(RequestContext context) async {

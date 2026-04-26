@@ -17,6 +17,7 @@ class ChatBloc extends AppBlocBase<ChatEvent, ChatState> {
     on<ChatStartedEvent>(_onChatStartedEvent);
     on<ChatPeerSelectedEvent>(_onChatPeerSelectedEvent);
     on<ChatRefreshRequestedEvent>(_onChatRefreshRequestedEvent);
+    on<ChatOlderMessagesRequestedEvent>(_onChatOlderMessagesRequestedEvent);
     on<ChatRetryRequestedEvent>(_onChatRetryRequestedEvent);
     on<ChatMessageSubmittedEvent>(_onChatMessageSubmittedEvent);
   }
@@ -34,6 +35,10 @@ class ChatBloc extends AppBlocBase<ChatEvent, ChatState> {
     try {
       final cachedPeers = await _chatUsecase.getCachedPeers();
       final cachedSelectedPeer = state.selectedPeer ?? cachedPeers.firstOrNull;
+      final cachedPeerUserId = cachedSelectedPeer?.id;
+      final cachedHasMoreOlder =
+          cachedPeerUserId == null ||
+          await _chatUsecase.hasMoreOlderMessages(cachedPeerUserId);
       emit(
         state.copyWith(
           data: state.data.copyWith(
@@ -42,21 +47,13 @@ class ChatBloc extends AppBlocBase<ChatEvent, ChatState> {
             messages: cachedSelectedPeer == null
                 ? []
                 : await _messagesFor(cachedSelectedPeer),
+            hasMoreOlder: cachedHasMoreOlder,
           ),
         ),
       );
 
-      final peers = await _chatUsecase.syncPeers();
-      final selectedPeer = state.selectedPeer ?? peers.firstOrNull;
-      emit(
-        state.copyWith(
-          data: state.data.copyWith(
-            peers: peers,
-            selectedPeer: selectedPeer,
-            messages: selectedPeer == null ? [] : state.messages,
-          ),
-        ),
-      );
+      await _syncPeers(emit);
+      final selectedPeer = state.selectedPeer;
       if (selectedPeer != null) {
         await _syncConversation(selectedPeer, emit);
       }
@@ -72,11 +69,15 @@ class ChatBloc extends AppBlocBase<ChatEvent, ChatState> {
     if (event.peer.id == state.selectedPeer?.id) {
       return;
     }
+    final peerUserId = event.peer.id;
     emit(
       state.copyWith(
         data: state.data.copyWith(
           selectedPeer: event.peer,
           messages: await _messagesFor(event.peer),
+          hasMoreOlder:
+              peerUserId == null ||
+              await _chatUsecase.hasMoreOlderMessages(peerUserId),
         ),
       ),
     );
@@ -89,9 +90,38 @@ class ChatBloc extends AppBlocBase<ChatEvent, ChatState> {
   ) async {
     final selectedPeer = state.selectedPeer;
     if (selectedPeer == null) {
+      await _syncPeers(emit);
+      final discoveredPeer = state.selectedPeer;
+      if (discoveredPeer != null) {
+        await _syncConversation(discoveredPeer, emit);
+      }
       return;
     }
     await _syncConversation(selectedPeer, emit);
+  }
+
+  Future<void> _onChatOlderMessagesRequestedEvent(
+    ChatOlderMessagesRequestedEvent event,
+    Emitter<ChatState> emit,
+  ) async {
+    final peerUserId = state.selectedPeer?.id;
+    if (peerUserId == null || state.isLoadingOlder || !state.hasMoreOlder) {
+      return;
+    }
+    emit(state.copyWith(data: state.data.copyWith(isLoadingOlder: true)));
+    try {
+      final result = await _chatUsecase.loadOlderMessages(peerUserId);
+      emit(
+        state.copyWith(
+          data: state.data.copyWith(
+            messages: _mapMessages(result.messages),
+            hasMoreOlder: result.hasMoreOlder,
+          ),
+        ),
+      );
+    } finally {
+      emit(state.copyWith(data: state.data.copyWith(isLoadingOlder: false)));
+    }
   }
 
   Future<void> _onChatMessageSubmittedEvent(
@@ -178,10 +208,14 @@ class ChatBloc extends AppBlocBase<ChatEvent, ChatState> {
 
     try {
       await _chatUsecase.syncOutbox(peerUserId: peerUserId);
-      final messages = await _chatUsecase.syncConversation(peerUserId);
+      final messages = await _chatUsecase.refreshConversation(peerUserId);
+      final hasMoreOlder = await _chatUsecase.hasMoreOlderMessages(peerUserId);
       emit(
         state.copyWith(
-          data: state.data.copyWith(messages: _mapMessages(messages)),
+          data: state.data.copyWith(
+            messages: _mapMessages(messages),
+            hasMoreOlder: hasMoreOlder,
+          ),
         ),
       );
     } finally {
@@ -191,6 +225,25 @@ class ChatBloc extends AppBlocBase<ChatEvent, ChatState> {
         ),
       );
     }
+  }
+
+  Future<void> _syncPeers(Emitter<ChatState> emit) async {
+    final peers = await _chatUsecase.syncPeers();
+    final selectedPeer = state.selectedPeer ?? peers.firstOrNull;
+    final selectedPeerUserId = selectedPeer?.id;
+    final hasMoreOlder =
+        selectedPeerUserId == null ||
+        await _chatUsecase.hasMoreOlderMessages(selectedPeerUserId);
+    emit(
+      state.copyWith(
+        data: state.data.copyWith(
+          peers: peers,
+          selectedPeer: selectedPeer,
+          messages: selectedPeer == null ? [] : state.messages,
+          hasMoreOlder: hasMoreOlder,
+        ),
+      ),
+    );
   }
 
   Future<List<ChatMessage>> _messagesFor(UserModel peer) async {

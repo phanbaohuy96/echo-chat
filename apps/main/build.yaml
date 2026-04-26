@@ -22,6 +22,7 @@ targets:
           - lib/data/data_source/datasource_module.dart
           - lib/data/data_source/local/local_data_manager.dart
           - lib/data/data_source/local/preferences_helper/preferences_helper.dart
+          - lib/data/data_source/local/sqlite/chat_conversation_sync_dao.dart
           - lib/data/data_source/local/sqlite/chat_message_dao.dart
           - lib/data/data_source/local/sqlite/chat_peer_dao.dart
           - lib/data/data_source/local/sqlite/sqlite_database.impl.dart
@@ -41,6 +42,7 @@ targets:
           - lib/data/data_source/datasource_module.dart
           - lib/data/data_source/local/local_data_manager.dart
           - lib/data/data_source/local/preferences_helper/preferences_helper.dart
+          - lib/data/data_source/local/sqlite/chat_conversation_sync_dao.dart
           - lib/data/data_source/local/sqlite/chat_message_dao.dart
           - lib/data/data_source/local/sqlite/chat_peer_dao.dart
           - lib/data/data_source/local/sqlite/sqlite_database.impl.dart

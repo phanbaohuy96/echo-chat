@@ -91,7 +91,12 @@ Requires `Authorization: Bearer <token>` and returns public users except the aut
 
 `GET /api/chat/messages?peer_user_id=<id>`
 
-Requires `Authorization: Bearer <token>` and returns the selected peer plus ordered direct messages between the authenticated user and that peer.
+Requires `Authorization: Bearer <token>` and returns the selected peer, an ordered message page, and sync metadata.
+
+Optional cursors:
+
+- `after_created_at` for newer-message delta refresh.
+- `before_created_at` plus `limit` for older-history pagination.
 
 ### Send chat message
 
@@ -145,4 +150,5 @@ Chat flow:
 5. Chat BLoC queues the outgoing message locally with `pending` status and a stable `client_message_id`.
 6. `ChatUsecase` posts the queued message to the backend; success marks it `sent` with the remote id/timestamp, while failure marks it `failed` with an error message.
 7. Failed messages can be retried with the original `client_message_id`, relying on backend idempotency to avoid duplicate remote messages.
-8. Manual refresh syncs pending outbox messages and reloads the selected remote conversation into the local cache.
+8. Manual refresh drains pending outbox rows, calls the backend with `after_created_at`, batch upserts newer messages, updates `chatConversationSync`, and re-reads SQLite.
+9. Scrolling near the top calls the backend with `before_created_at` and a page limit, batch upserts older history, and re-reads SQLite without duplicates.

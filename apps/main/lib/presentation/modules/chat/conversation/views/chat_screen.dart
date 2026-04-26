@@ -35,6 +35,7 @@ class _ChatScreenState extends StateBase<ChatScreen> {
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback(
       (_) => bloc.add(ChatStartedEvent()),
     );
@@ -42,6 +43,7 @@ class _ChatScreenState extends StateBase<ChatScreen> {
 
   @override
   void dispose() {
+    _scrollController.removeListener(_onScroll);
     _controller.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -66,10 +68,16 @@ class _ChatScreenState extends StateBase<ChatScreen> {
           actions: [
             IconButton(
               tooltip: l10n.refresh,
-              onPressed: selectedPeer == null || state.isLoadingMessages
+              onPressed:
+                  state.isLoadingPeers ||
+                      state.isLoadingMessages ||
+                      state.isSyncing
                   ? null
                   : _refreshConversation,
-              icon: state.isLoadingMessages || state.isSyncing
+              icon:
+                  state.isLoadingPeers ||
+                      state.isLoadingMessages ||
+                      state.isSyncing
                   ? const SizedBox.square(
                       dimension: 18,
                       child: CircularProgressIndicator(strokeWidth: 2),
@@ -220,11 +228,20 @@ class _ChatScreenState extends StateBase<ChatScreen> {
         return ListView.separated(
           controller: _scrollController,
           padding: const EdgeInsets.fromLTRB(18, 18, 18, 22),
-          itemCount: state.messages.length,
+          itemCount: state.messages.length + (state.isLoadingOlder ? 1 : 0),
           separatorBuilder: (_, __) => const SizedBox(height: 12),
           itemBuilder: (context, index) {
+            if (state.isLoadingOlder && index == 0) {
+              return const Center(
+                child: SizedBox.square(
+                  dimension: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              );
+            }
+            final messageIndex = index - (state.isLoadingOlder ? 1 : 0);
             return _MessageBubble(
-              message: state.messages[index],
+              message: state.messages[messageIndex],
               maxWidth: bubbleMaxWidth,
             );
           },

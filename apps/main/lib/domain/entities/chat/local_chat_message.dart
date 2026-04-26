@@ -13,6 +13,9 @@ class LocalChatMessage {
     required this.status,
     this.localId,
     this.remoteId,
+    this.updatedAt,
+    this.deletedAt,
+    this.version = 1,
     this.errorMessage,
   });
 
@@ -32,6 +35,9 @@ class LocalChatMessage {
       message: message.message,
       createdAt: message.createdAt,
       status: ChatMessageStatus.sent,
+      updatedAt: message.updatedAt,
+      deletedAt: message.deletedAt,
+      version: message.version,
     );
   }
 
@@ -43,6 +49,9 @@ class LocalChatMessage {
   final String recipientUserId;
   final String message;
   final DateTime createdAt;
+  final DateTime? updatedAt;
+  final DateTime? deletedAt;
+  final int version;
   final ChatMessageStatus status;
   final String? errorMessage;
 

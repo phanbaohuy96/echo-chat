@@ -133,6 +133,176 @@ void main() {
       ]);
     });
 
+    test('returns the latest page without a cursor', () {
+      final jane = authService.signup(
+        name: 'Jane Doe',
+        username: 'jane',
+        password: 'secret123',
+      );
+      final bob = authService.signup(
+        name: 'Bob Doe',
+        username: 'bob',
+        password: 'secret123',
+      );
+
+      for (var i = 0; i < 5; i++) {
+        chatService.sendMessage(
+          sender: jane.user,
+          recipientUserId: bob.user.id,
+          clientMessageId: 'jane-$i',
+          message: 'Message $i',
+        );
+      }
+
+      final conversation = chatService.getConversation(
+        user: jane.user,
+        peerUserId: bob.user.id,
+        limit: 2,
+      );
+
+      expect(conversation.messages.map((message) => message.message), [
+        'Message 3',
+        'Message 4',
+      ]);
+      expect(conversation.hasMoreOlder, isTrue);
+      expect(
+        conversation.latestMessageCreatedAt,
+        conversation.messages.last.createdAt,
+      );
+      expect(
+        conversation.oldestMessageCreatedAt,
+        conversation.messages.first.createdAt,
+      );
+    });
+
+    test('returns newer messages after a cursor', () {
+      final jane = authService.signup(
+        name: 'Jane Doe',
+        username: 'jane',
+        password: 'secret123',
+      );
+      final bob = authService.signup(
+        name: 'Bob Doe',
+        username: 'bob',
+        password: 'secret123',
+      );
+
+      final firstMessage = chatService.sendMessage(
+        sender: jane.user,
+        recipientUserId: bob.user.id,
+        clientMessageId: 'jane-1',
+        message: 'Message 1',
+      );
+      chatService.sendMessage(
+        sender: jane.user,
+        recipientUserId: bob.user.id,
+        clientMessageId: 'jane-2',
+        message: 'Message 2',
+      );
+      chatService.sendMessage(
+        sender: jane.user,
+        recipientUserId: bob.user.id,
+        clientMessageId: 'jane-3',
+        message: 'Message 3',
+      );
+
+      final conversation = chatService.getConversation(
+        user: jane.user,
+        peerUserId: bob.user.id,
+        afterCreatedAt: firstMessage.createdAt,
+      );
+
+      expect(conversation.messages.map((message) => message.message), [
+        'Message 2',
+        'Message 3',
+      ]);
+      expect(conversation.hasMoreOlder, isTrue);
+    });
+
+    test('returns older messages before a cursor', () {
+      final jane = authService.signup(
+        name: 'Jane Doe',
+        username: 'jane',
+        password: 'secret123',
+      );
+      final bob = authService.signup(
+        name: 'Bob Doe',
+        username: 'bob',
+        password: 'secret123',
+      );
+
+      for (var i = 0; i < 5; i++) {
+        chatService.sendMessage(
+          sender: jane.user,
+          recipientUserId: bob.user.id,
+          clientMessageId: 'jane-$i',
+          message: 'Message $i',
+        );
+      }
+      final latestPage = chatService.getConversation(
+        user: jane.user,
+        peerUserId: bob.user.id,
+        limit: 2,
+      );
+
+      final olderPage = chatService.getConversation(
+        user: jane.user,
+        peerUserId: bob.user.id,
+        beforeCreatedAt: latestPage.messages.first.createdAt,
+        limit: 2,
+      );
+
+      expect(olderPage.messages.map((message) => message.message), [
+        'Message 1',
+        'Message 2',
+      ]);
+      expect(olderPage.hasMoreOlder, isTrue);
+    });
+
+    test('returns capped delta metadata from the returned page', () {
+      final jane = authService.signup(
+        name: 'Jane Doe',
+        username: 'jane',
+        password: 'secret123',
+      );
+      final bob = authService.signup(
+        name: 'Bob Doe',
+        username: 'bob',
+        password: 'secret123',
+      );
+
+      final firstMessage = chatService.sendMessage(
+        sender: jane.user,
+        recipientUserId: bob.user.id,
+        clientMessageId: 'jane-0',
+        message: 'Message 0',
+      );
+      for (var i = 1; i < 5; i++) {
+        chatService.sendMessage(
+          sender: jane.user,
+          recipientUserId: bob.user.id,
+          clientMessageId: 'jane-$i',
+          message: 'Message $i',
+        );
+      }
+
+      final deltaPage = chatService.getConversation(
+        user: jane.user,
+        peerUserId: bob.user.id,
+        afterCreatedAt: firstMessage.createdAt,
+        limit: 2,
+      );
+
+      expect(deltaPage.messages.map((message) => message.message), [
+        'Message 1',
+        'Message 2',
+      ]);
+      expect(
+        deltaPage.latestMessageCreatedAt,
+        deltaPage.messages.last.createdAt,
+      );
+    });
+
     test('returns the existing message for an idempotent retry', () {
       final jane = authService.signup(
         name: 'Jane Doe',

@@ -1,7 +1,8 @@
 enum SqliteTable {
   user('user'),
   chatPeer('chatPeer'),
-  chatMessage('chatMessage');
+  chatMessage('chatMessage'),
+  chatConversationSync('chatConversationSync');
 
   const SqliteTable(this.name);
 

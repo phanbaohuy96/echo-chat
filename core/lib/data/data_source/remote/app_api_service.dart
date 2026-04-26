@@ -30,9 +30,19 @@ class AppApiService {
     );
   }
 
-  Future<Map<String, dynamic>> getChatMessages(String peerUserId) {
+  Future<Map<String, dynamic>> getChatMessages(
+    String peerUserId, {
+    DateTime? afterCreatedAt,
+    DateTime? beforeCreatedAt,
+    int? limit,
+  }) {
     return restApi
-        .getChatMessages(peerUserId)
+        .getChatMessages(
+          peerUserId,
+          afterCreatedAt?.toUtc().toIso8601String(),
+          beforeCreatedAt?.toUtc().toIso8601String(),
+          limit,
+        )
         .then((value) => value as Map<String, dynamic>);
   }
 

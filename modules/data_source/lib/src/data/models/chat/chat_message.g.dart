@@ -14,6 +14,13 @@ ChatMessageDto _$ChatMessageDtoFromJson(Map<String, dynamic> json) =>
       clientMessageId: json['client_message_id'] as String,
       message: json['message'] as String,
       createdAt: DateTime.parse(json['created_at'] as String),
+      updatedAt: json['updated_at'] == null
+          ? null
+          : DateTime.parse(json['updated_at'] as String),
+      deletedAt: json['deleted_at'] == null
+          ? null
+          : DateTime.parse(json['deleted_at'] as String),
+      version: (json['version'] as num?)?.toInt() ?? 1,
     );
 
 Map<String, dynamic> _$ChatMessageDtoToJson(ChatMessageDto instance) =>
@@ -24,4 +31,7 @@ Map<String, dynamic> _$ChatMessageDtoToJson(ChatMessageDto instance) =>
       'client_message_id': instance.clientMessageId,
       'message': instance.message,
       'created_at': instance.createdAt.toIso8601String(),
+      'updated_at': instance.updatedAt?.toIso8601String(),
+      'deleted_at': instance.deletedAt?.toIso8601String(),
+      'version': instance.version,
     };

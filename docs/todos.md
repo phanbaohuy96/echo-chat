@@ -16,7 +16,7 @@
 - [x] Add `GET /api/auth/me`.
 - [x] Add `POST /api/chat/messages`.
 - [x] Add in-memory user/token/message store.
-- [ ] Add backend tests for health, auth, and chat.
+- [x] Add backend tests for health, auth, and chat.
 
 ## Phase 3 — Shared client DTOs
 
@@ -87,7 +87,17 @@
 - [x] Verify cached messages render after app restart before remote refresh.
 - [x] Update docs with the final local-first flow.
 
-## Phase 9 — Tooling and verification
+## Phase 9 — Scale local-first sync
+
+- [x] Add backend cursor parameters for newer-message delta sync and older-history pagination.
+- [x] Add sync metadata to chat conversation responses.
+- [x] Add future-safe message fields: `updated_at`, `deleted_at`, and `version`.
+- [x] Add `chatConversationSync` SQLite metadata table.
+- [x] Batch remote message upserts into SQLite.
+- [x] Use existing cursor listing helper style for older-history loading.
+- [x] Update README and API docs for delta sync and pagination.
+
+## Phase 10 — Tooling and verification
 
 - [x] Add backend make targets.
 - [x] Update clean tooling for pure Dart backend packages if needed.
