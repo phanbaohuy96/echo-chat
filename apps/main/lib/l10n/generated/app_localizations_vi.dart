@@ -36,7 +36,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get userRole => 'Vai trò người dùng';
 
   @override
-  String get poweredByVNS => 'Powered by VNS';
+  String get poweredByEchoChat => 'Được hỗ trợ bởi EchoChat';
 
   @override
   String get pleaseSelectARoleBeforeLoginMsg =>

@@ -52,7 +52,7 @@ class _SignUpScreenState extends StateBase<SignUpScreen> {
           bottomNavigationBar: Padding(
             padding: EdgeInsets.only(bottom: max(paddingBottom, 16)),
             child: Text(
-              l10n.poweredByVNS,
+              l10n.poweredByEchoChat,
               style: textTheme.labelMedium,
               textAlign: TextAlign.center,
             ),

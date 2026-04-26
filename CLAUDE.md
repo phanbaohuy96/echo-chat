@@ -2,7 +2,7 @@
 
 ## Project identity
 
-EchoChat is a demo chat monorepo created from the Flutter core template. The template is only the starting point; do not make changes in `VNS/mobile-flutter-core` for EchoChat work.
+EchoChat is a demo chat monorepo created from the Flutter core template. The template is only the starting point; do not make changes outside this repository for EchoChat work.
 
 ## Repository rules
 

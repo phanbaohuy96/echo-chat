@@ -36,7 +36,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get userRole => 'User role';
 
   @override
-  String get poweredByVNS => 'Powered by VNS';
+  String get poweredByEchoChat => 'Powered by EchoChat';
 
   @override
   String get pleaseSelectARoleBeforeLoginMsg =>
