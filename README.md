@@ -2,6 +2,22 @@
 
 EchoChat is a demo Flutter chat app built around **local-first messaging**. The chat UI reads SQLite first, renders cached data immediately, then syncs with the Dart Frog backend in the background. Sending also starts locally: messages are inserted as `pending` before the network request and later become `sent` or `failed`.
 
+## Responsive UI showcase
+
+<p>
+  <img src="docs/showcase/signin-mobile.png" alt="EchoChat sign-in on mobile" width="220" />
+  <img src="docs/showcase/signup-mobile.png" alt="EchoChat sign-up on mobile" width="220" />
+</p>
+
+<p>
+  <img src="docs/showcase/signin-desktop.png" alt="EchoChat sign-in on desktop" width="420" />
+  <img src="docs/showcase/chat-desktop.png" alt="EchoChat chat on desktop" width="420" />
+</p>
+
+<p>
+  <img src="docs/showcase/notfound-desktop.png" alt="EchoChat not-found state on desktop" width="420" />
+</p>
+
 ## Local-first workflow
 
 ```text
@@ -56,6 +72,26 @@ User taps failed bubble
 ```
 
 The stable `client_message_id` is the retry/idempotency key. Reusing it for the same sender prevents duplicate remote messages.
+
+## Sync conflict and scale plan
+
+Current sync is intentionally simple:
+
+- Messages are immutable, so there is no edit/delete merge policy yet.
+- The server-confirmed row wins when it has the same `client_message_id` or `remote_id`.
+- SQLite reads only the latest local conversation window for the UI.
+- Remote refresh currently syncs the conversation response the backend returns, then re-reads SQLite.
+
+Next production-oriented steps:
+
+1. Add per-conversation sync metadata with newest and oldest remote cursors.
+2. Change refresh to delta sync: fetch only messages newer than the newest local cursor.
+3. Add history pagination: fetch older pages only when the user scrolls upward.
+4. Batch remote upserts in SQLite transactions to avoid one write round-trip per message.
+5. Add `updated_at`, `deleted_at`, and version fields before supporting edits or deletes.
+6. Add cache retention rules so very large conversations do not grow forever on-device.
+
+With this plan, normal refresh stays small, old history loads on demand, and conflict rules remain explicit as chat features grow.
 
 ## Layer responsibilities
 

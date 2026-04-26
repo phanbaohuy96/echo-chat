@@ -82,7 +82,7 @@ class _MyAppState extends State<MainApplication>
 
   MaterialApp _buildApplication(AppGlobalState state, BuildContext context) {
     return MaterialApp(
-      title: 'eGap',
+      title: 'EchoChat',
       scrollBehavior: const MobileLikeScrollBehavior(),
       theme: state.lightTheme?.theme,
       darkTheme: state.darkTheme?.theme,
@@ -111,10 +111,8 @@ class _MyAppState extends State<MainApplication>
       initialRoute: SignInScreen.routeName,
       builder: EasyLoading.init(
         builder: (_, child) {
-          return MobileSizeLayoutConstraints(
-            child: FlashyFlushbarProvider(
-              child: TextScaleFixed(child: child ?? const SizedBox()),
-            ),
+          return FlashyFlushbarProvider(
+            child: TextScaleFixed(child: child ?? const SizedBox()),
           );
         },
       ),

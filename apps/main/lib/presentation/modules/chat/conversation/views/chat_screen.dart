@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:core/core.dart';
 import 'package:data_source/data_source.dart';
 import 'package:flutter/material.dart';
@@ -77,12 +79,68 @@ class _ChatScreenState extends StateBase<ChatScreen> {
           ],
           child: SafeArea(
             top: false,
-            child: Column(
-              children: [
-                _buildPeerSelector(state),
-                Expanded(child: _buildMessages(state)),
-                _buildComposer(state),
-              ],
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final contentWidth = min(constraints.maxWidth, 960.0);
+                final isWide = constraints.maxWidth >= 900;
+                return DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        context.themeColor.primary.withValues(alpha: 0.08),
+                        context.themeColor.scaffoldBackgroundColor,
+                      ],
+                    ),
+                  ),
+                  child: Center(
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        isWide ? 24 : 0,
+                        isWide ? 20 : 0,
+                        isWide ? 24 : 0,
+                        isWide ? 20 : 0,
+                      ),
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: context.themeColor.cardBackground,
+                          borderRadius: BorderRadius.circular(isWide ? 28 : 0),
+                          border: isWide
+                              ? Border.all(
+                                  color: context.themeColor.onSurface
+                                      .withValues(alpha: 0.06),
+                                )
+                              : null,
+                          boxShadow: isWide
+                              ? [
+                                  BoxShadow(
+                                    color: context.themeColor.primary
+                                        .withValues(alpha: 0.10),
+                                    blurRadius: 32,
+                                    offset: const Offset(0, 18),
+                                  ),
+                                ]
+                              : const [],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(isWide ? 28 : 0),
+                          child: SizedBox(
+                            width: contentWidth,
+                            child: Column(
+                              children: [
+                                _buildPeerSelector(state),
+                                Expanded(child: _buildMessages(state)),
+                                _buildComposer(state),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
           ),
         );
@@ -103,24 +161,40 @@ class _ChatScreenState extends StateBase<ChatScreen> {
         child: Text(l10n.createAnotherAccountToStartConversation),
       );
     }
-    return SizedBox(
-      height: 64,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        itemCount: state.peers.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
-        itemBuilder: (context, index) {
-          final peer = state.peers[index];
-          final selected = peer.id == state.selectedPeer?.id;
-          return ChoiceChip(
-            label: Text(_peerDisplayName(peer)),
-            selected: selected,
-            onSelected: selected || state.isLoadingMessages
-                ? null
-                : (_) => _selectPeer(peer),
-          );
-        },
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: context.themeColor.cardBackground,
+        border: Border(
+          bottom: BorderSide(
+            color: context.themeColor.onSurface.withValues(alpha: 0.06),
+          ),
+        ),
+      ),
+      child: SizedBox(
+        height: 72,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+          itemCount: state.peers.length,
+          separatorBuilder: (_, __) => const SizedBox(width: 10),
+          itemBuilder: (context, index) {
+            final peer = state.peers[index];
+            final selected = peer.id == state.selectedPeer?.id;
+            return ChoiceChip(
+              avatar: CircleAvatar(
+                backgroundColor: selected
+                    ? context.themeColor.onPrimary.withValues(alpha: 0.20)
+                    : context.themeColor.primary.withValues(alpha: 0.10),
+                child: Text(_peerInitial(peer)),
+              ),
+              label: Text(_peerDisplayName(peer)),
+              selected: selected,
+              onSelected: selected || state.isLoadingMessages
+                  ? null
+                  : (_) => _selectPeer(peer),
+            );
+          },
+        ),
       ),
     );
   }
@@ -140,47 +214,73 @@ class _ChatScreenState extends StateBase<ChatScreen> {
         ),
       );
     }
-    return ListView.separated(
-      controller: _scrollController,
-      padding: const EdgeInsets.all(16),
-      itemCount: state.messages.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
-      itemBuilder: (context, index) {
-        return _MessageBubble(message: state.messages[index]);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final bubbleMaxWidth = min(constraints.maxWidth * 0.78, 640.0);
+        return ListView.separated(
+          controller: _scrollController,
+          padding: const EdgeInsets.fromLTRB(18, 18, 18, 22),
+          itemCount: state.messages.length,
+          separatorBuilder: (_, __) => const SizedBox(height: 12),
+          itemBuilder: (context, index) {
+            return _MessageBubble(
+              message: state.messages[index],
+              maxWidth: bubbleMaxWidth,
+            );
+          },
+        );
       },
     );
   }
 
   Widget _buildComposer(ChatState state) {
     final canSend = state.selectedPeer != null;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              controller: _controller,
-              enabled: state.selectedPeer != null,
-              minLines: 1,
-              maxLines: 4,
-              decoration: InputDecoration(hintText: l10n.message),
-              onSubmitted: (_) => _send(),
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: context.themeColor.cardBackground,
+        border: Border(
+          top: BorderSide(
+            color: context.themeColor.onSurface.withValues(alpha: 0.06),
+          ),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(18, 12, 18, 18),
+        child: Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _controller,
+                enabled: state.selectedPeer != null,
+                minLines: 1,
+                maxLines: 4,
+                decoration: InputDecoration(
+                  hintText: l10n.message,
+                  prefixIcon: const Icon(Icons.chat_bubble_outline),
+                ),
+                onSubmitted: (_) => _send(),
+              ),
             ),
-          ),
-          const SizedBox(width: 12),
-          IconButton.filled(
-            onPressed: canSend ? _send : null,
-            tooltip: l10n.send,
-            icon: state.isSending
-                ? const SizedBox.square(
-                    dimension: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.send),
-          ),
-        ],
+            const SizedBox(width: 12),
+            IconButton.filled(
+              onPressed: canSend ? _send : null,
+              tooltip: l10n.send,
+              icon: state.isSending
+                  ? const SizedBox.square(
+                      dimension: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.send_rounded),
+            ),
+          ],
+        ),
       ),
     );
+  }
+
+  String _peerInitial(UserModel peer) {
+    final displayName = _peerDisplayName(peer).trim();
+    return displayName.isEmpty ? '?' : displayName[0].toUpperCase();
   }
 
   String _peerDisplayName(UserModel peer) {
@@ -197,9 +297,10 @@ class _ChatScreenState extends StateBase<ChatScreen> {
 }
 
 class _MessageBubble extends StatelessWidget {
-  const _MessageBubble({required this.message});
+  const _MessageBubble({required this.message, required this.maxWidth});
 
   final ChatMessage message;
+  final double maxWidth;
 
   @override
   Widget build(BuildContext context) {
@@ -208,8 +309,23 @@ class _MessageBubble extends StatelessWidget {
     final foreground = message.isMine ? colors.onPrimary : colors.onSurface;
     final bubble = DecoratedBox(
       decoration: BoxDecoration(
-        color: message.isMine ? colors.primary : colors.cardBackground,
-        borderRadius: BorderRadius.circular(18),
+        color: message.isMine ? colors.primary : colors.scaffoldBackgroundColor,
+        borderRadius: BorderRadius.only(
+          topLeft: const Radius.circular(20),
+          topRight: const Radius.circular(20),
+          bottomLeft: Radius.circular(message.isMine ? 20 : 6),
+          bottomRight: Radius.circular(message.isMine ? 6 : 20),
+        ),
+        border: message.isMine
+            ? null
+            : Border.all(color: colors.onSurface.withValues(alpha: 0.06)),
+        boxShadow: [
+          BoxShadow(
+            color: colors.onSurface.withValues(alpha: 0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -239,9 +355,7 @@ class _MessageBubble extends StatelessWidget {
       ),
     );
     final constrained = ConstrainedBox(
-      constraints: BoxConstraints(
-        maxWidth: MediaQuery.sizeOf(context).width * 0.78,
-      ),
+      constraints: BoxConstraints(maxWidth: maxWidth),
       child: message.status == ChatMessageStatus.failed && message.isMine
           ? InkWell(
               onTap: () => context.read<ChatBloc>().add(

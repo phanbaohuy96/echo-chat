@@ -5,9 +5,9 @@ import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../../../domain/entities/auth/response.dart';
-import '../../../../../../generated/assets.dart';
 import '../../../../../../l10n/localization_ext.dart';
 import '../../../../../base/base.dart';
+import '../../../auth_form_shell.dart';
 import '../../../authentication_coordinator.dart';
 import '../../bloc/signin_bloc.dart';
 import '../signin_screen.dart';
@@ -57,56 +57,52 @@ class _AccountSelectionState extends StateBase<AccountSelection> {
               textAlign: TextAlign.center,
             ),
           ),
-          child: Center(
-            child: SingleChildScrollView(
-              physics: const ClampingScrollPhysics(),
-              child: _buildBody(context),
-            ),
-          ),
+          child: AuthFormShell(child: _buildBody()),
         );
       },
     );
   }
 
-  Widget _buildBody(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Image.asset(Assets.image.logo, height: 100, fit: BoxFit.fitHeight),
-          const SizedBox(height: 20),
-          Text(l10n.appName, style: textTheme.titleMedium),
-          const SizedBox(height: 30),
-          TextField(
-            key: const Key(SignInScreen.usernameKey),
-            controller: _usernameController,
-            textInputAction: TextInputAction.next,
-            decoration: InputDecoration(labelText: l10n.username),
+  Widget _buildBody() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        AuthBrandHeader(title: l10n.appName),
+        const SizedBox(height: 32),
+        TextField(
+          key: const Key(SignInScreen.usernameKey),
+          controller: _usernameController,
+          textInputAction: TextInputAction.next,
+          decoration: InputDecoration(
+            labelText: l10n.username,
+            prefixIcon: const Icon(Icons.person_outline),
           ),
-          const SizedBox(height: 16),
-          TextField(
-            key: const Key(SignInScreen.passwordKey),
-            controller: _passwordController,
-            obscureText: true,
-            decoration: InputDecoration(labelText: l10n.password),
-            onSubmitted: (_) => _handleLogin(),
+        ),
+        const SizedBox(height: 16),
+        TextField(
+          key: const Key(SignInScreen.passwordKey),
+          controller: _passwordController,
+          obscureText: true,
+          decoration: InputDecoration(
+            labelText: l10n.password,
+            prefixIcon: const Icon(Icons.lock_outline),
           ),
-          const SizedBox(height: 30),
-          SizedBox(
-            width: double.infinity,
-            child: ThemeButton.primary(
-              title: l10n.login,
-              onPressed: _handleLogin,
-            ),
+          onSubmitted: (_) => _handleLogin(),
+        ),
+        const SizedBox(height: 30),
+        SizedBox(
+          width: double.infinity,
+          child: ThemeButton.primary(
+            title: l10n.login,
+            onPressed: _handleLogin,
           ),
-          const SizedBox(height: 12),
-          TextButton(
-            onPressed: () => context.openSignUp(),
-            child: Text(l10n.createAccount),
-          ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 12),
+        TextButton(
+          onPressed: () => context.openSignUp(),
+          child: Text(l10n.createAccount),
+        ),
+      ],
     );
   }
 }

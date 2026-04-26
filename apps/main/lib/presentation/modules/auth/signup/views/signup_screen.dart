@@ -5,10 +5,10 @@ import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../../domain/entities/auth/response.dart';
-import '../../../../../generated/assets.dart';
 import '../../../../../l10n/localization_ext.dart';
 import '../../../../base/base.dart';
 import '../../../chat/chat_coordinator.dart';
+import '../../auth_form_shell.dart';
 import '../bloc/signup_bloc.dart';
 
 part 'signup.action.dart';
@@ -57,60 +57,59 @@ class _SignUpScreenState extends StateBase<SignUpScreen> {
               textAlign: TextAlign.center,
             ),
           ),
-          child: Center(
-            child: SingleChildScrollView(
-              physics: const ClampingScrollPhysics(),
-              child: _buildBody(),
-            ),
-          ),
+          child: AuthFormShell(child: _buildBody()),
         );
       },
     );
   }
 
   Widget _buildBody() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Image.asset(Assets.image.logo, height: 100, fit: BoxFit.fitHeight),
-          const SizedBox(height: 20),
-          Text(l10n.createEchoChatAccount, style: textTheme.titleMedium),
-          const SizedBox(height: 30),
-          TextField(
-            controller: _nameController,
-            textInputAction: TextInputAction.next,
-            decoration: InputDecoration(labelText: l10n.name),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        AuthBrandHeader(title: l10n.createEchoChatAccount),
+        const SizedBox(height: 32),
+        TextField(
+          controller: _nameController,
+          textInputAction: TextInputAction.next,
+          decoration: InputDecoration(
+            labelText: l10n.name,
+            prefixIcon: const Icon(Icons.badge_outlined),
           ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _usernameController,
-            textInputAction: TextInputAction.next,
-            decoration: InputDecoration(labelText: l10n.username),
+        ),
+        const SizedBox(height: 16),
+        TextField(
+          controller: _usernameController,
+          textInputAction: TextInputAction.next,
+          decoration: InputDecoration(
+            labelText: l10n.username,
+            prefixIcon: const Icon(Icons.person_outline),
           ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _passwordController,
-            obscureText: true,
-            decoration: InputDecoration(labelText: l10n.password),
-            onSubmitted: (_) => _handleSignup(),
+        ),
+        const SizedBox(height: 16),
+        TextField(
+          controller: _passwordController,
+          obscureText: true,
+          decoration: InputDecoration(
+            labelText: l10n.password,
+            prefixIcon: const Icon(Icons.lock_outline),
           ),
-          const SizedBox(height: 30),
-          SizedBox(
-            width: double.infinity,
-            child: ThemeButton.primary(
-              title: l10n.signUp,
-              onPressed: _handleSignup,
-            ),
+          onSubmitted: (_) => _handleSignup(),
+        ),
+        const SizedBox(height: 30),
+        SizedBox(
+          width: double.infinity,
+          child: ThemeButton.primary(
+            title: l10n.signUp,
+            onPressed: _handleSignup,
           ),
-          const SizedBox(height: 12),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(l10n.alreadyHaveAccount),
-          ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 12),
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(l10n.alreadyHaveAccount),
+        ),
+      ],
     );
   }
 }
