@@ -11,6 +11,7 @@ sealed class _StateData with _$StateData {
     @Default(false) bool isLoadingPeers,
     @Default(false) bool isLoadingMessages,
     @Default(false) bool isSending,
+    @Default(false) bool isSyncing,
   }) = __StateData;
 
   factory _StateData.initial() => const _StateData();
@@ -37,6 +38,7 @@ abstract class ChatState {
 
   bool get isSending => data.isSending;
 
+  bool get isSyncing => data.isSyncing;
 }
 
 class ChatInitial extends ChatState {
@@ -48,18 +50,39 @@ final _factories = <Type, Function(_StateData data)>{
 };
 
 class ChatMessage {
-  const ChatMessage({required this.text, required this.isMine});
+  const ChatMessage({
+    required this.clientMessageId,
+    required this.text,
+    required this.isMine,
+    required this.createdAt,
+    required this.status,
+    this.localId,
+    this.remoteId,
+    this.errorMessage,
+  });
 
-  factory ChatMessage.fromDto(
-    ChatMessageDto message, {
+  factory ChatMessage.fromLocal(
+    LocalChatMessage message, {
     required String? currentUserId,
   }) {
     return ChatMessage(
+      localId: message.localId,
+      remoteId: message.remoteId,
+      clientMessageId: message.clientMessageId,
       text: message.message,
-      isMine: message.senderUserId == currentUserId,
+      isMine: message.isMine(currentUserId),
+      createdAt: message.createdAt,
+      status: message.status,
+      errorMessage: message.errorMessage,
     );
   }
 
+  final int? localId;
+  final String? remoteId;
+  final String clientMessageId;
   final String text;
   final bool isMine;
+  final DateTime createdAt;
+  final ChatMessageStatus status;
+  final String? errorMessage;
 }

@@ -43,6 +43,7 @@ dependencies:
 
   # data
   freezed_annotation: 3.1.0
+  sqflite_common_ffi_web: ^1.0.1
   data_source:
     path: ../../modules/data_source
 

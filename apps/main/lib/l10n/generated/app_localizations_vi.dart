@@ -114,4 +114,10 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get send => 'Gửi';
+
+  @override
+  String get sending => 'Đang gửi...';
+
+  @override
+  String get failedTapToRetry => 'Gửi thất bại. Nhấn để thử lại.';
 }

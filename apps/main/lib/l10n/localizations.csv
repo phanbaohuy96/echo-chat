@@ -33,3 +33,5 @@ message,Message,Tin nhắn
 user,User,Người dùng
 refresh,Refresh,Làm mới
 send,Send,Gửi
+sending,Sending...,Đang gửi...
+failedTapToRetry,Failed. Tap to retry.,Gửi thất bại. Nhấn để thử lại.

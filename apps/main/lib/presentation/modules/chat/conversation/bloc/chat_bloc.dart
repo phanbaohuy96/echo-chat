@@ -3,6 +3,7 @@ import 'package:data_source/data_source.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';
 
+import '../../../../../domain/entities/chat/local_chat_message.dart';
 import '../../../../../domain/usecases/chat/chat_usecase.dart';
 import '../../../../base/base.dart';
 
@@ -16,46 +17,51 @@ class ChatBloc extends AppBlocBase<ChatEvent, ChatState> {
     on<ChatStartedEvent>(_onChatStartedEvent);
     on<ChatPeerSelectedEvent>(_onChatPeerSelectedEvent);
     on<ChatRefreshRequestedEvent>(_onChatRefreshRequestedEvent);
+    on<ChatRetryRequestedEvent>(_onChatRetryRequestedEvent);
     on<ChatMessageSubmittedEvent>(_onChatMessageSubmittedEvent);
   }
 
-  static const _maxRetainedMessages = 80;
-
   final ChatUsecase _chatUsecase;
   final _uuid = const Uuid();
+  final _retryingMessageIds = <String>{};
 
   Future<void> _onChatStartedEvent(
     ChatStartedEvent event,
     Emitter<ChatState> emit,
   ) async {
-    emit(
-      state.copyWith(
-        data: state.data.copyWith(isLoadingPeers: true),
-      ),
-    );
+    emit(state.copyWith(data: state.data.copyWith(isLoadingPeers: true)));
 
     try {
-      final response = await _chatUsecase.getPeers();
-      final selectedPeer = state.selectedPeer ?? response.users.firstOrNull;
+      final cachedPeers = await _chatUsecase.getCachedPeers();
+      final cachedSelectedPeer = state.selectedPeer ?? cachedPeers.firstOrNull;
       emit(
         state.copyWith(
           data: state.data.copyWith(
-            peers: response.users,
+            peers: cachedPeers,
+            selectedPeer: cachedSelectedPeer,
+            messages: cachedSelectedPeer == null
+                ? []
+                : await _messagesFor(cachedSelectedPeer),
+          ),
+        ),
+      );
+
+      final peers = await _chatUsecase.syncPeers();
+      final selectedPeer = state.selectedPeer ?? peers.firstOrNull;
+      emit(
+        state.copyWith(
+          data: state.data.copyWith(
+            peers: peers,
             selectedPeer: selectedPeer,
             messages: selectedPeer == null ? [] : state.messages,
-            isLoadingPeers: false,
           ),
         ),
       );
       if (selectedPeer != null) {
-        await _loadConversation(selectedPeer, emit);
+        await _syncConversation(selectedPeer, emit);
       }
     } finally {
-      emit(
-        state.copyWith(
-          data: state.data.copyWith(isLoadingPeers: false),
-        ),
-      );
+      emit(state.copyWith(data: state.data.copyWith(isLoadingPeers: false)));
     }
   }
 
@@ -70,11 +76,11 @@ class ChatBloc extends AppBlocBase<ChatEvent, ChatState> {
       state.copyWith(
         data: state.data.copyWith(
           selectedPeer: event.peer,
-          messages: [],
+          messages: await _messagesFor(event.peer),
         ),
       ),
     );
-    await _loadConversation(event.peer, emit);
+    await _syncConversation(event.peer, emit);
   }
 
   Future<void> _onChatRefreshRequestedEvent(
@@ -85,7 +91,7 @@ class ChatBloc extends AppBlocBase<ChatEvent, ChatState> {
     if (selectedPeer == null) {
       return;
     }
-    await _loadConversation(selectedPeer, emit);
+    await _syncConversation(selectedPeer, emit);
   }
 
   Future<void> _onChatMessageSubmittedEvent(
@@ -95,45 +101,67 @@ class ChatBloc extends AppBlocBase<ChatEvent, ChatState> {
     final message = event.message.trim();
     final selectedPeer = state.selectedPeer;
     final recipientUserId = selectedPeer?.id;
-    if (message.isEmpty || recipientUserId == null || state.isSending) {
+    final senderUserId = localDataManager.userInfo?.id;
+    if (message.isEmpty || recipientUserId == null || senderUserId == null) {
       return;
     }
 
-    emit(
-      state.copyWith(
-        data: state.data.copyWith(isSending: true),
-      ),
-    );
+    final clientMessageId = _clientMessageId();
+    emit(state.copyWith(data: state.data.copyWith(isSending: true)));
 
     try {
-      final response = await _chatUsecase.sendMessage(
+      final pendingMessage = await _chatUsecase.enqueueMessage(
         recipientUserId: recipientUserId,
-        clientMessageId: _clientMessageId(),
+        clientMessageId: clientMessageId,
         message: message,
+        senderUserId: senderUserId,
       );
       emit(
         state.copyWith(
           data: state.data.copyWith(
-            messages: _appendMessage(
-              state.messages,
-              ChatMessage.fromDto(
-                response.message,
-                currentUserId: localDataManager.userInfo?.id,
+            messages: [
+              ...state.messages,
+              ChatMessage.fromLocal(
+                pendingMessage,
+                currentUserId: senderUserId,
               ),
-            ),
+            ],
           ),
         ),
       );
-    } finally {
+      final messages = await _chatUsecase.sendQueuedMessage(clientMessageId);
       emit(
         state.copyWith(
-          data: state.data.copyWith(isSending: false),
+          data: state.data.copyWith(messages: _mapMessages(messages)),
         ),
       );
+    } finally {
+      emit(state.copyWith(data: state.data.copyWith(isSending: false)));
     }
   }
 
-  Future<void> _loadConversation(
+  Future<void> _onChatRetryRequestedEvent(
+    ChatRetryRequestedEvent event,
+    Emitter<ChatState> emit,
+  ) async {
+    if (!_retryingMessageIds.add(event.clientMessageId)) {
+      return;
+    }
+    try {
+      final messages = await _chatUsecase.retryMessage(event.clientMessageId);
+      if (messages.isNotEmpty) {
+        emit(
+          state.copyWith(
+            data: state.data.copyWith(messages: _mapMessages(messages)),
+          ),
+        );
+      }
+    } finally {
+      _retryingMessageIds.remove(event.clientMessageId);
+    }
+  }
+
+  Future<void> _syncConversation(
     UserModel peer,
     Emitter<ChatState> emit,
   ) async {
@@ -144,46 +172,43 @@ class ChatBloc extends AppBlocBase<ChatEvent, ChatState> {
 
     emit(
       state.copyWith(
-        data: state.data.copyWith(isLoadingMessages: true),
+        data: state.data.copyWith(isLoadingMessages: true, isSyncing: true),
       ),
     );
 
     try {
-      final response = await _chatUsecase.getConversation(peerUserId);
-      final currentUserId = localDataManager.userInfo?.id;
+      await _chatUsecase.syncOutbox(peerUserId: peerUserId);
+      final messages = await _chatUsecase.syncConversation(peerUserId);
       emit(
         state.copyWith(
-          data: state.data.copyWith(
-            selectedPeer: response.peer,
-            messages: response.messages
-                .map(
-                  (message) => ChatMessage.fromDto(
-                    message,
-                    currentUserId: currentUserId,
-                  ),
-                )
-                .toList(),
-          ),
+          data: state.data.copyWith(messages: _mapMessages(messages)),
         ),
       );
     } finally {
       emit(
         state.copyWith(
-          data: state.data.copyWith(isLoadingMessages: false),
+          data: state.data.copyWith(isLoadingMessages: false, isSyncing: false),
         ),
       );
     }
   }
 
-  List<ChatMessage> _appendMessage(
-    List<ChatMessage> messages,
-    ChatMessage message,
-  ) {
-    final nextMessages = [...messages, message];
-    if (nextMessages.length <= _maxRetainedMessages) {
-      return nextMessages;
+  Future<List<ChatMessage>> _messagesFor(UserModel peer) async {
+    final peerUserId = peer.id;
+    if (peerUserId == null) {
+      return [];
     }
-    return nextMessages.sublist(nextMessages.length - _maxRetainedMessages);
+    return _mapMessages(await _chatUsecase.getCachedConversation(peerUserId));
+  }
+
+  List<ChatMessage> _mapMessages(List<LocalChatMessage> messages) {
+    final currentUserId = localDataManager.userInfo?.id;
+    return messages
+        .map(
+          (message) =>
+              ChatMessage.fromLocal(message, currentUserId: currentUserId),
+        )
+        .toList();
   }
 
   String _clientMessageId() => 'client_${_uuid.v4()}';

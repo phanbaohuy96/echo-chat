@@ -1,119 +1,184 @@
-# Flutter Base Structure
+# EchoChat
 
-An opinionated Flutter project template with multi-flavor builds, codegen, a
-curated plugin set, and distribution scaffolding — ready to fork into a new
-app.
+EchoChat is a demo Flutter chat app built around **local-first messaging**. The chat UI reads SQLite first, renders cached data immediately, then syncs with the Dart Frog backend in the background. Sending also starts locally: messages are inserted as `pending` before the network request and later become `sent` or `failed`.
 
-## What's included
+## Local-first workflow
 
+```text
+Open chat screen
+  |
+  |-- read local cache ---------------------> SQLite
+  |      |                                      |
+  |      |                                      |-- chatPeer
+  |      |                                      `-- chatMessage
+  |      |
+  |      `-- render cached peers/messages immediately
+  |
+  `-- sync remote in background ------------> Dart Frog API
+         |                                      |
+         |                                      |-- GET /api/chat/users
+         |                                      `-- GET /api/chat/messages?peer_user_id=<id>
+         |
+         `-- upsert server data ------------> SQLite
+                |
+                `-- re-read local rows -----> render refreshed UI
+
+Rule: the final UI state always comes from SQLite, never directly from a server DTO.
 ```
-├── apps/main/                   Main Flutter app (dev / staging / sandbox / prod flavors)
-├── core/                        Shared library: utilities, services, theming, base widgets
-├── modules/
-│   └── data_source/             Retrofit + hive_ce + json_serializable plumbing
-├── plugins/
-│   ├── fl_ui/                   Common widgets (inputs, dropdowns, RadioButtonWithTitle, …)
-│   ├── fl_utils/                Extensions, date utils, formatters, currency/weight helpers
-│   ├── fl_theme/                AppTheme / ScreenTheme / ThemeColor with checkbox + chip theming
-│   ├── fl_media/                Image cropper, media viewer, pick_file_helper, video widgets
-│   └── fl_navigation/           go_router-based routing utilities
-├── tools/module_generator/      Code generators (modules, assets, localizations, translations)
-├── apps/main/fastlane/          iOS + Android distribution, CI-CD-friendly Fastfile
-├── apps/main/android/keystores/ Per-flavor signing config (keystore.properties.example)
-└── makefile                     `make help` lists every task
+
+## Send and retry workflow
+
+```text
+User sends message
+  |
+  |-- generate client_message_id
+  |
+  |-- insert local chatMessage as pending ---> SQLite
+  |      |
+  |      `-- render pending bubble immediately
+  |
+  `-- POST /api/chat/messages --------------> Dart Frog API
+         |
+         |-- success ------------------------> mark local row sent
+         |                                      |-- remote_id
+         |                                      `-- server created_at
+         |
+         `-- failure ------------------------> mark local row failed
+                                                `-- keep client_message_id
+
+User taps failed bubble
+  |
+  |-- mark same local row pending ----------> SQLite
+  |
+  `-- POST same client_message_id ----------> Dart Frog API
+         |
+         `-- backend returns existing message if that id was already saved
 ```
 
-Stack: Flutter **3.41.7**, Dart **3.11.5**, Kotlin **2.1.0**, AGP **8.9.1**,
-Gradle **8.12**. Codegen: `freezed 3.2.3`, `retrofit_generator 10.2.3`,
-`json_serializable ^6.11.1`, `hive_ce_generator ^1.9.3`,
-`injectable_generator ^2.6.2`.
+The stable `client_message_id` is the retry/idempotency key. Reusing it for the same sender prevents duplicate remote messages.
 
-Pin the Flutter version however you prefer — the `makefile` auto-detects
-[fvm](https://fvm.app) if it's on PATH (using `fvm_pubspec.yaml` to resolve
-the version) and falls back to the system `flutter` otherwise.
+## Layer responsibilities
 
-## Quickstart
+```text
+Presentation
+  ChatScreen -> user input and message bubbles
+  ChatBloc   -> cache-first screen state and per-message status
+
+Domain
+  ChatUsecase -> cache reads, remote sync, outbox drain, send, retry
+
+Data
+  ChatLocalRepository      -> DAO orchestration
+  ChatPeerDao              -> cached peers
+  ChatMessageDao           -> cached messages + outbox state
+  AppApiService            -> REST calls
+
+Backend
+  Dart Frog routes -> auth/input validation
+  ChatService      -> chat rules and idempotency
+  DemoStore        -> in-memory demo users/messages
+```
+
+## Local data model
+
+SQLite chat tables live in the Flutter app:
+
+- `chatPeer` caches messageable users.
+- `chatMessage` stores cached, `pending`, `sent`, and `failed` direct messages.
+
+Important `chatMessage` fields:
+
+- `local_id` — local ordering.
+- `remote_id` — server-confirmed id.
+- `client_message_id` — local idempotency and backend retry deduplication.
+- `conversation_peer_user_id` — conversation query key.
+- `sender_user_id`, `recipient_user_id`, `message`, `created_at`, `status`, `error_message`.
+
+Indexes enforce unique local `client_message_id`, unique non-null `remote_id`, and efficient conversation ordering.
+
+## Monorepo layout
+
+```text
+├── apps/main/              Flutter client
+│   ├── lib/data/           SQLite DAOs and local repositories
+│   ├── lib/domain/         chat/auth use cases and entities
+│   └── lib/presentation/   BLoC screens and widgets
+├── apps/backend/           Dart Frog demo backend
+├── core/                   shared Flutter/client infrastructure
+├── modules/data_source/    shared client DTOs and API models
+├── plugins/                reusable Flutter packages from the template
+├── docs/                   architecture, API, and roadmap notes
+└── makefile                project commands
+```
+
+## Backend API
+
+Chat endpoints require `Authorization: Bearer <token>`:
+
+- `GET /api/chat/users` — list peers excluding the current user.
+- `GET /api/chat/messages?peer_user_id=<id>` — fetch a direct conversation.
+- `POST /api/chat/messages` — send a direct message with `recipient_user_id`, `client_message_id`, and `message`.
+
+See `docs/backend-api.md` for request/response examples.
+
+## Web SQLite
+
+Flutter web uses `sqflite_common_ffi_web`. The required static assets are checked into `apps/main/web/`:
+
+- `sqflite_sw.js`
+- `sqlite3.wasm`
+
+If the package or wasm binary changes, refresh them from `apps/main`:
 
 ```bash
-# 1. Seed env + keystore config from the templates
-cp apps/main/.env.example apps/main/.env
-cp apps/main/android/keystores/keystore.properties.example \
-   apps/main/android/keystores/keystore.properties
-# Fill in the placeholder values in both files.
-
-# 2. Pull deps + run code generators across all packages
-make pub_get
-make gen_all
-
-# 3. Run on a device / emulator
-cd apps/main
-flutter run --flavor dev -t lib/main_dev.dart --dart-define-from-file=./.env
-
-# or build an APK:
-flutter build apk --debug --flavor dev -t lib/main_dev.dart \
-    --dart-define-from-file=./.env
+fvm dart run sqflite_common_ffi_web:setup --force
 ```
 
-The full task list is in `make help`. Highlights:
+## Run locally
 
-| Task | Purpose |
-| --- | --- |
-| `make setup` | Clean + pub_get + lang + asset + gen_all + gen_env |
-| `make pub_get` | Flutter pub get across core, data_source, apps/main, all plugins |
-| `make gen_all` | Run build_runner across core, data_source, apps/main |
-| `make lang` | Regenerate `.arb` files from `localizations.csv` |
-| `make gen_translation` / `make apply_translation` | Round-trip translations through a status-tracked CSV |
-| `make build` | Interactive build picker (env × platform) |
-| `make coverage_main` | Test coverage for `apps/main` |
-| `make format` | `dart format .` |
+```bash
+cp apps/main/.env.example apps/main/.env
+cp apps/backend/.env.example apps/backend/.env
+make pub_get
+make gen_all
+```
 
-## Making it yours
+Start the backend:
 
-When forking this template for a real app, rename the template identity:
+```bash
+make run_backend_e2e
+```
 
-1. **Bundle IDs / package names.** Edit:
-   - `apps/main/app_identifier.yaml`
-   - `apps/main/ios/Flutter/AppSpecific.xcconfig`
-   - `apps/main/android/app_specific.properties`
-   - `apps/main/android/app/build.gradle` (`namespace`)
-   - `apps/main/android/app/src/main/kotlin/com/pbh/baseflutter/MainActivity.kt`
-     — move the file under a new path (e.g. `com/yourorg/yourapp/`) and update
-     the `package` declaration to match.
-2. **App icons & splash.** Replace everything under `apps/main/assets/images/`
-   and `apps/main/android/app/src/main/res/mipmap-*`. Regenerate launch assets
-   via `flutter_native_splash` (see `apps/main/flutter_native_splash.yaml`).
-3. **Brand font.** The `fonts:` block in `apps/main/pubspec.yaml` is a
-   commented stub — add the family and drop the `.woff2` files into
-   `apps/main/assets/fonts/`.
-4. **Distribution.** Update `apps/main/fastlane/Fastfile` and the
-   `apps/main/ios/*.md` provisioning guides with your own Apple Developer
-   team ID and Firebase app IDs. `apps/main/fastlane/.env.example` lists
-   every CI-CD secret the lanes consume.
+Run the Flutter web app:
 
-## Architecture
+```bash
+cd apps/main
+fvm flutter run -d web-server \
+  --web-hostname 127.0.0.1 \
+  --web-port 8092 \
+  --dart-define-from-file=.env \
+  -t lib/main_dev.dart
+```
 
-Clean architecture across three layers:
+## Verification
 
-- **`data/`** — data sources (REST, hive_ce local storage), DTO models, repositories
-- **`domain/`** — entities, use cases, repository contracts
-- **`presentation/`** — BLoC (flutter_bloc + bloc_concurrency), widgets, routing
+```bash
+fvm flutter analyze
+cd apps/main && fvm flutter test
+```
 
-`core/` exposes everything shared. `modules/data_source/` hosts generic
-retrofit clients. `apps/main/` wires the three layers together with
-`injectable` DI.
+Manual regression path:
 
-## Environments
+1. Start the backend and Flutter web app.
+2. Sign up two users.
+3. Sign in as one user and select the other as a peer.
+4. Send a message and verify it appears immediately, then becomes sent.
+5. Simulate a failed `POST /api/chat/messages` and verify `Failed. Tap to retry`.
+6. Restore the backend and tap the failed bubble; verify retry clears the failed state without duplicating the remote message.
+7. Reload with remote conversation sync delayed; verify cached peers/messages render before the remote response.
 
-Four flavors wired through dart-defines, Android flavors, and iOS xcconfigs:
+## More documentation
 
-- `dev` — local / staging backend, debug signing
-- `staging` — pre-prod, staging keystore
-- `sandbox` — customer sandbox, sandbox keystore
-- `prod` — production, prod keystore
-
-Each has its own entry point (`apps/main/lib/main_{dev,staging,sandbox,prod}.dart`)
-and Firebase app registration slot.
-
-## License
-
-MIT. See `LICENSE` in each plugin directory.
+- `docs/architecture.md` — full client/backend data flow.
+- `docs/backend-api.md` — API contract details.
+- `docs/todos.md` — roadmap and completed phases.

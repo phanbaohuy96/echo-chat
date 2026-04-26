@@ -12,6 +12,12 @@ class ChatPeerSelectedEvent extends ChatEvent {
 
 class ChatRefreshRequestedEvent extends ChatEvent {}
 
+class ChatRetryRequestedEvent extends ChatEvent {
+  ChatRetryRequestedEvent(this.clientMessageId);
+
+  final String clientMessageId;
+}
+
 class ChatMessageSubmittedEvent extends ChatEvent {
   ChatMessageSubmittedEvent(this.message);
 

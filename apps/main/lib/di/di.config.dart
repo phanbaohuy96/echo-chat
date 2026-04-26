@@ -22,7 +22,10 @@ import '../data/data_source/datasource_module.dart' as _i737;
 import '../data/data_source/local/local_data_manager.dart' as _i655;
 import '../data/data_source/local/preferences_helper/preferences_helper.dart'
     as _i212;
+import '../data/data_source/local/sqlite/chat_message_dao.dart' as _i817;
+import '../data/data_source/local/sqlite/chat_peer_dao.dart' as _i377;
 import '../data/data_source/local/sqlite/sqlite_database.impl.dart' as _i833;
+import '../data/repositories/chat/chat_local_repository.dart' as _i366;
 import '../domain/usecases/auth/auth_usecase.dart' as _i738;
 import '../domain/usecases/chat/chat_usecase.dart' as _i834;
 import '../presentation/modules/auth/signin/bloc/signin_bloc.dart' as _i893;
@@ -53,13 +56,15 @@ Future<_i174.GetIt> $initGetIt(
       gh<_i494.CorePreferencesHelper>(),
     ),
   );
+  gh.factory<_i817.ChatMessageDao>(
+    () => _i817.ChatMessageDao(gh<_i494.SQLiteDatabase>()),
+  );
+  gh.factory<_i377.ChatPeerDao>(
+    () => _i377.ChatPeerDao(gh<_i494.SQLiteDatabase>()),
+  );
   gh.factoryParam<_i494.ThemeDialog, _i409.BuildContext, dynamic>(
     (context, _) => _i83.AppThemeDialog(context),
   );
-  gh.factory<_i834.ChatUsecase>(
-    () => _i834.ChatInteractorImpl(gh<_i494.AppApiService>()),
-  );
-  gh.factory<_i730.ChatBloc>(() => _i730.ChatBloc(gh<_i834.ChatUsecase>()));
   gh.factory<_i494.CoreLocalDataManager>(
     () =>
         appDatasourceModule.coreLocalDataManager(gh<_i655.LocalDataManager>()),
@@ -72,6 +77,20 @@ Future<_i174.GetIt> $initGetIt(
   );
   gh.factory<_i893.SigninBloc>(() => _i893.SigninBloc(gh<_i738.AuthUsecase>()));
   gh.factory<_i246.SignupBloc>(() => _i246.SignupBloc(gh<_i738.AuthUsecase>()));
+  gh.factory<_i366.ChatLocalRepository>(
+    () => _i366.ChatLocalRepository(
+      gh<_i377.ChatPeerDao>(),
+      gh<_i817.ChatMessageDao>(),
+    ),
+  );
+  gh.factory<_i834.ChatUsecase>(
+    () => _i834.ChatInteractorImpl(
+      gh<_i655.LocalDataManager>(),
+      gh<_i494.AppApiService>(),
+      gh<_i366.ChatLocalRepository>(),
+    ),
+  );
+  gh.factory<_i730.ChatBloc>(() => _i730.ChatBloc(gh<_i834.ChatUsecase>()));
   return getIt;
 }
 

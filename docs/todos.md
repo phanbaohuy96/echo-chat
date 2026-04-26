@@ -71,21 +71,21 @@
 
 ## Phase 8 — Apply local-first best practice
 
-- [ ] Add `chatPeer` and `chatMessage` SQLite table names.
-- [ ] Increase SQLite DB version and add upgrade table creation for chat tables.
-- [ ] Add `ChatPeerDao` with peer upsert/list/get operations.
-- [ ] Add `ChatMessageDao` with pending insert, remote upsert, mark sent/failed, conversation query, and outbox query operations.
-- [ ] Add `ChatLocalRepository` to map SQLite rows to domain chat entities.
-- [ ] Add `ChatMessageStatus` values: `pending`, `sent`, `failed`.
-- [ ] Extend chat domain messages with status, error, and local/remote IDs.
-- [ ] Refactor `ChatUsecase` to load cached peers/messages first and sync remote second.
-- [ ] Queue outgoing messages locally before remote send.
-- [ ] Update sent/failed status after backend sync.
-- [ ] Add retry support using the same `client_message_id`.
-- [ ] Update chat BLoC with retry/sync state.
-- [ ] Update chat UI with pending/sent/failed indicators and failed-message retry.
-- [ ] Verify cached messages render after app restart before remote refresh.
-- [ ] Update docs with the final local-first flow.
+- [x] Add `chatPeer` and `chatMessage` SQLite table names.
+- [x] Increase SQLite DB version and add upgrade table creation for chat tables.
+- [x] Add `ChatPeerDao` with peer upsert/list/get operations.
+- [x] Add `ChatMessageDao` with pending insert, remote upsert, mark sent/failed, conversation query, and outbox query operations.
+- [x] Add `ChatLocalRepository` to map SQLite rows to domain chat entities.
+- [x] Add `ChatMessageStatus` values: `pending`, `sent`, `failed`.
+- [x] Extend chat domain messages with status, error, and local/remote IDs.
+- [x] Refactor `ChatUsecase` to load cached peers/messages first and sync remote second.
+- [x] Queue outgoing messages locally before remote send.
+- [x] Update sent/failed status after backend sync.
+- [x] Add retry support using the same `client_message_id`.
+- [x] Update chat BLoC with retry/sync state.
+- [x] Update chat UI with pending/sent/failed indicators and failed-message retry.
+- [x] Verify cached messages render after app restart before remote refresh.
+- [x] Update docs with the final local-first flow.
 
 ## Phase 9 — Tooling and verification
 

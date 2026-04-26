@@ -1,0 +1,258 @@
+import 'package:core/core.dart';
+import 'package:data_source/data_source.dart';
+import 'package:injectable/injectable.dart';
+
+import '../../../../domain/entities/chat/local_chat_message.dart';
+import 'data_access_object.dart';
+
+@injectable
+class ChatMessageDao extends DAO {
+  ChatMessageDao(super.db);
+
+  static const localId = 'local_id';
+  static const remoteId = 'remote_id';
+  static const clientMessageId = 'client_message_id';
+  static const conversationPeerUserId = 'conversation_peer_user_id';
+  static const senderUserId = 'sender_user_id';
+  static const recipientUserId = 'recipient_user_id';
+  static const message = 'message';
+  static const createdAt = 'created_at';
+  static const status = 'status';
+  static const errorMessage = 'error_message';
+
+  @override
+  String get tableName => SqliteTable.chatMessage.name;
+
+  static String get createTableQuery =>
+      '''
+    CREATE TABLE IF NOT EXISTS ${SqliteTable.chatMessage.name} (
+      $localId INTEGER PRIMARY KEY AUTOINCREMENT,
+      $remoteId TEXT,
+      $clientMessageId TEXT NOT NULL,
+      $conversationPeerUserId TEXT NOT NULL,
+      $senderUserId TEXT NOT NULL,
+      $recipientUserId TEXT NOT NULL,
+      $message TEXT NOT NULL,
+      $createdAt INTEGER NOT NULL,
+      $status TEXT NOT NULL,
+      $errorMessage TEXT
+    )
+  ''';
+
+  static List<String> get createIndexQueries => [
+    '''
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_chat_message_client_message_id
+      ON ${SqliteTable.chatMessage.name} ($clientMessageId)
+    ''',
+    '''
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_chat_message_remote_id
+      ON ${SqliteTable.chatMessage.name} ($remoteId)
+      WHERE $remoteId IS NOT NULL
+    ''',
+    '''
+      CREATE INDEX IF NOT EXISTS idx_chat_message_conversation
+      ON ${SqliteTable.chatMessage.name} ($conversationPeerUserId, $createdAt, $localId)
+    ''',
+  ];
+
+  @override
+  String get createQuery => createTableQuery;
+
+  @override
+  Future<void> create() async {
+    await super.create();
+    for (final query in createIndexQueries) {
+      await db.database.execute(query);
+    }
+  }
+
+  @override
+  List<DataColumn> get columns => [
+    DataColumn(name: localId, type: DataType.int, isPrimary: true),
+    DataColumn(name: remoteId, type: DataType.text),
+    DataColumn(name: clientMessageId, type: DataType.text, notNull: true),
+    DataColumn(
+      name: conversationPeerUserId,
+      type: DataType.text,
+      notNull: true,
+    ),
+    DataColumn(name: senderUserId, type: DataType.text, notNull: true),
+    DataColumn(name: recipientUserId, type: DataType.text, notNull: true),
+    DataColumn(name: message, type: DataType.text, notNull: true),
+    DataColumn(name: createdAt, type: DataType.int, notNull: true),
+    DataColumn(name: status, type: DataType.text, notNull: true),
+    DataColumn(name: errorMessage, type: DataType.text),
+  ];
+
+  Future<LocalChatMessage> insertPending({
+    required String clientMessageId,
+    required String conversationPeerUserId,
+    required String senderUserId,
+    required String recipientUserId,
+    required String message,
+    required DateTime createdAt,
+  }) async {
+    final values = {
+      remoteId: null,
+      ChatMessageDao.clientMessageId: clientMessageId,
+      ChatMessageDao.conversationPeerUserId: conversationPeerUserId,
+      ChatMessageDao.senderUserId: senderUserId,
+      ChatMessageDao.recipientUserId: recipientUserId,
+      ChatMessageDao.message: message,
+      ChatMessageDao.createdAt: createdAt.millisecondsSinceEpoch,
+      status: ChatMessageStatus.pending.name,
+      errorMessage: null,
+    };
+    await execute(
+      () => db.insert(
+        tableName,
+        values,
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      ),
+    );
+    return (await getMessage(clientMessageId))!;
+  }
+
+  Future<void> upsertRemoteMessages(
+    List<ChatMessageDto> messages, {
+    required String currentUserId,
+  }) async {
+    await execute(() async {
+      for (final remoteMessage in messages) {
+        await _upsertRemoteMessage(remoteMessage, currentUserId: currentUserId);
+      }
+    });
+  }
+
+  Future<void> markSent({
+    required String clientMessageId,
+    required ChatMessageDto remoteMessage,
+    required String currentUserId,
+  }) async {
+    await execute(
+      () => _upsertRemoteMessage(remoteMessage, currentUserId: currentUserId),
+    );
+  }
+
+  Future<void> markPending(String clientMessageId) async {
+    await execute(
+      () => db.update(
+        tableName,
+        {status: ChatMessageStatus.pending.name, errorMessage: null},
+        where: '${ChatMessageDao.clientMessageId} = ?',
+        whereArgs: [clientMessageId],
+      ),
+    );
+  }
+
+  Future<void> markFailed({
+    required String clientMessageId,
+    required String errorMessage,
+  }) async {
+    await execute(
+      () => db.update(
+        tableName,
+        {
+          status: ChatMessageStatus.failed.name,
+          ChatMessageDao.errorMessage: errorMessage,
+        },
+        where: '${ChatMessageDao.clientMessageId} = ?',
+        whereArgs: [clientMessageId],
+      ),
+    );
+  }
+
+  Future<List<LocalChatMessage>> getConversation(
+    String peerUserId, {
+    int limit = 80,
+  }) async {
+    final rows = await execute(
+      () => db.query(
+        tableName,
+        where: '$conversationPeerUserId = ?',
+        whereArgs: [peerUserId],
+        orderBy: '$createdAt DESC, $localId DESC',
+        limit: limit,
+      ),
+    );
+    return rows.reversed.map(_fromRow).toList();
+  }
+
+  Future<LocalChatMessage?> getMessage(String clientMessageId) async {
+    final rows = await execute(
+      () => db.query(
+        tableName,
+        where: '${ChatMessageDao.clientMessageId} = ?',
+        whereArgs: [clientMessageId],
+        limit: 1,
+      ),
+    );
+    if (rows.isEmpty) {
+      return null;
+    }
+    return _fromRow(rows.first);
+  }
+
+  Future<List<LocalChatMessage>> getOutbox({String? peerUserId}) async {
+    final where = peerUserId == null
+        ? '$status = ?'
+        : '$status = ? AND $conversationPeerUserId = ?';
+    final whereArgs = peerUserId == null
+        ? [ChatMessageStatus.pending.name]
+        : [ChatMessageStatus.pending.name, peerUserId];
+    final rows = await execute(
+      () => db.query(
+        tableName,
+        where: where,
+        whereArgs: whereArgs,
+        orderBy: '$createdAt ASC, $localId ASC',
+      ),
+    );
+    return rows.map(_fromRow).toList();
+  }
+
+  Future<void> _upsertRemoteMessage(
+    ChatMessageDto remoteMessage, {
+    required String currentUserId,
+  }) {
+    final localMessage = LocalChatMessage.fromRemote(
+      remoteMessage,
+      currentUserId: currentUserId,
+    );
+    return db.insert(
+      tableName,
+      _toRow(localMessage),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Map<String, Object?> _toRow(LocalChatMessage message) {
+    return {
+      localId: message.localId,
+      remoteId: message.remoteId,
+      clientMessageId: message.clientMessageId,
+      conversationPeerUserId: message.conversationPeerUserId,
+      senderUserId: message.senderUserId,
+      recipientUserId: message.recipientUserId,
+      ChatMessageDao.message: message.message,
+      createdAt: message.createdAt.millisecondsSinceEpoch,
+      status: message.status.name,
+      errorMessage: message.errorMessage,
+    }..removeWhere((key, value) => key == localId && value == null);
+  }
+
+  LocalChatMessage _fromRow(Map<String, Object?> row) {
+    return LocalChatMessage(
+      localId: row[localId] as int?,
+      remoteId: row[remoteId] as String?,
+      clientMessageId: row[clientMessageId] as String,
+      conversationPeerUserId: row[conversationPeerUserId] as String,
+      senderUserId: row[senderUserId] as String,
+      recipientUserId: row[recipientUserId] as String,
+      message: row[message] as String,
+      createdAt: DateTime.fromMillisecondsSinceEpoch(row[createdAt] as int),
+      status: ChatMessageStatus.values.byName(row[status] as String),
+      errorMessage: row[errorMessage] as String?,
+    );
+  }
+}

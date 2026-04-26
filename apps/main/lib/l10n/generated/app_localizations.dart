@@ -301,6 +301,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Send'**
   String get send;
+
+  /// No description provided for @sending.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending...'**
+  String get sending;
+
+  /// No description provided for @failedTapToRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed. Tap to retry.'**
+  String get failedTapToRetry;
 }
 
 class _AppLocalizationsDelegate

@@ -1,10 +1,15 @@
 import 'package:core/core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:injectable/injectable.dart';
+import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
+
+import 'chat_message_dao.dart';
+import 'chat_peer_dao.dart';
 
 @Singleton(as: SQLiteDatabase)
 class SQLiteDatabaseImpl extends SQLiteDatabase {
   /// Version should be updated when database structure changed
-  int get version => 2;
+  int get version => 3;
 
   String get name => 'local.db';
 
@@ -18,6 +23,10 @@ class SQLiteDatabaseImpl extends SQLiteDatabase {
       return _db;
     }
 
+    if (kIsWeb) {
+      databaseFactory = databaseFactoryFfiWeb;
+    }
+
     final databasesPath = await getDatabasesPath();
     final path = '$databasesPath/$name';
     return _db = await openDatabase(
@@ -26,15 +35,15 @@ class SQLiteDatabaseImpl extends SQLiteDatabase {
       onCreate: (Database db, int version) async {
         _isOpen = true;
         await onCreate?.call(db, version);
+        await _createChatTables(db);
       },
       onConfigure: (Database db) async {
         await db.execute('PRAGMA foreign_keys = ON');
       },
       onUpgrade: (db, oldVersion, newVersion) async {
-        // TODO(template): handle onUpgrade database version
-        // await db.execute(
-        //   'DROP TABLE IF EXISTS ${SqliteTable.form.name}',
-        // );
+        if (oldVersion < 3) {
+          await _createChatTables(db);
+        }
       },
       onDowngrade: (db, oldVersion, newVersion) async {
         // TODO(template): handle downgrade database version
@@ -43,6 +52,14 @@ class SQLiteDatabaseImpl extends SQLiteDatabase {
         // );
       },
     );
+  }
+
+  Future<void> _createChatTables(Database db) async {
+    await db.execute(ChatPeerDao.createTableQuery);
+    await db.execute(ChatMessageDao.createTableQuery);
+    for (final query in ChatMessageDao.createIndexQueries) {
+      await db.execute(query);
+    }
   }
 
   @override

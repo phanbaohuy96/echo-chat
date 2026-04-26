@@ -2,6 +2,7 @@ import 'package:core/core.dart';
 import 'package:data_source/data_source.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../../domain/entities/chat/local_chat_message.dart';
 import '../../../../../l10n/localization_ext.dart';
 import '../../../../base/base.dart';
 import '../bloc/chat_bloc.dart';
@@ -66,7 +67,7 @@ class _ChatScreenState extends StateBase<ChatScreen> {
               onPressed: selectedPeer == null || state.isLoadingMessages
                   ? null
                   : _refreshConversation,
-              icon: state.isLoadingMessages
+              icon: state.isLoadingMessages || state.isSyncing
                   ? const SizedBox.square(
                       dimension: 18,
                       child: CircularProgressIndicator(strokeWidth: 2),
@@ -151,7 +152,7 @@ class _ChatScreenState extends StateBase<ChatScreen> {
   }
 
   Widget _buildComposer(ChatState state) {
-    final canSend = state.selectedPeer != null && !state.isSending;
+    final canSend = state.selectedPeer != null;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
       child: Row(
@@ -204,28 +205,56 @@ class _MessageBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.themeColor;
     final textTheme = context.textTheme;
-    return Align(
-      alignment: message.isMine ? Alignment.centerRight : Alignment.centerLeft,
-      child: ConstrainedBox(
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.sizeOf(context).width * 0.78,
-        ),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: message.isMine ? colors.primary : colors.cardBackground,
-            borderRadius: BorderRadius.circular(18),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            child: Text(
+    final foreground = message.isMine ? colors.onPrimary : colors.onSurface;
+    final bubble = DecoratedBox(
+      decoration: BoxDecoration(
+        color: message.isMine ? colors.primary : colors.cardBackground,
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
               message.text,
-              style: textTheme.bodyMedium?.copyWith(
-                color: message.isMine ? colors.onPrimary : colors.onSurface,
-              ),
+              style: textTheme.bodyMedium?.copyWith(color: foreground),
             ),
-          ),
+            if (message.isMine && message.status != ChatMessageStatus.sent) ...[
+              const SizedBox(height: 4),
+              Text(
+                message.status == ChatMessageStatus.pending
+                    ? context.l10n.sending
+                    : context.l10n.failedTapToRetry,
+                style: textTheme.labelSmall?.copyWith(
+                  color: message.status == ChatMessageStatus.failed
+                      ? colors.error
+                      : foreground.withValues(alpha: 0.72),
+                ),
+              ),
+            ],
+          ],
         ),
       ),
+    );
+    final constrained = ConstrainedBox(
+      constraints: BoxConstraints(
+        maxWidth: MediaQuery.sizeOf(context).width * 0.78,
+      ),
+      child: message.status == ChatMessageStatus.failed && message.isMine
+          ? InkWell(
+              onTap: () => context.read<ChatBloc>().add(
+                ChatRetryRequestedEvent(message.clientMessageId),
+              ),
+              borderRadius: BorderRadius.circular(18),
+              child: bubble,
+            )
+          : bubble,
+    );
+    return Align(
+      alignment: message.isMine ? Alignment.centerRight : Alignment.centerLeft,
+      child: constrained,
     );
   }
 }

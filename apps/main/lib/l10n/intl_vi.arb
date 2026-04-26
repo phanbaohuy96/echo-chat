@@ -32,5 +32,7 @@
   "message": "Tin nhắn",
   "user": "Người dùng",
   "refresh": "Làm mới",
-  "send": "Gửi"
+  "send": "Gửi",
+  "sending": "Đang gửi...",
+  "failedTapToRetry": "Gửi thất bại. Nhấn để thử lại."
 }

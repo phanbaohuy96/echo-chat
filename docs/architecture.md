@@ -138,9 +138,11 @@ Signin/signup flow:
 
 Chat flow:
 
-1. Chat screen loads available peers through `ChatUsecase`.
-2. User selects a peer and Chat BLoC fetches that conversation.
-3. User sends a message from the composer.
-4. Chat BLoC calls `ChatUsecase` with `recipient_user_id` and `client_message_id`.
-5. Backend validates bearer token, applies idempotency, stores the message, and returns it.
-6. Chat BLoC appends the returned message and refresh can reload the remote conversation.
+1. Chat screen asks `ChatUsecase` for cached peers and cached conversation messages from SQLite.
+2. Chat BLoC renders cached data immediately, then syncs peers and the selected conversation from the backend.
+3. Synced peers/messages are upserted into local `chatPeer` and `chatMessage` tables before the UI is refreshed from the local cache.
+4. User sends a message from the composer.
+5. Chat BLoC queues the outgoing message locally with `pending` status and a stable `client_message_id`.
+6. `ChatUsecase` posts the queued message to the backend; success marks it `sent` with the remote id/timestamp, while failure marks it `failed` with an error message.
+7. Failed messages can be retried with the original `client_message_id`, relying on backend idempotency to avoid duplicate remote messages.
+8. Manual refresh syncs pending outbox messages and reloads the selected remote conversation into the local cache.

@@ -22,7 +22,10 @@ targets:
           - lib/data/data_source/datasource_module.dart
           - lib/data/data_source/local/local_data_manager.dart
           - lib/data/data_source/local/preferences_helper/preferences_helper.dart
+          - lib/data/data_source/local/sqlite/chat_message_dao.dart
+          - lib/data/data_source/local/sqlite/chat_peer_dao.dart
           - lib/data/data_source/local/sqlite/sqlite_database.impl.dart
+          - lib/data/repositories/chat/chat_local_repository.dart
           - lib/di/di.config.dart
           - lib/di/di.dart
           - lib/domain/usecases/auth/auth_usecase.dart
@@ -38,7 +41,10 @@ targets:
           - lib/data/data_source/datasource_module.dart
           - lib/data/data_source/local/local_data_manager.dart
           - lib/data/data_source/local/preferences_helper/preferences_helper.dart
+          - lib/data/data_source/local/sqlite/chat_message_dao.dart
+          - lib/data/data_source/local/sqlite/chat_peer_dao.dart
           - lib/data/data_source/local/sqlite/sqlite_database.impl.dart
+          - lib/data/repositories/chat/chat_local_repository.dart
           - lib/di/di.config.dart
           - lib/di/di.dart
           - lib/domain/usecases/auth/auth_usecase.dart

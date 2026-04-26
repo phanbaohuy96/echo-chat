@@ -159,7 +159,7 @@ Errors:
 
 ### `POST /api/chat/messages`
 
-Sends a direct message. Reusing the same `client_message_id` for the same sender returns the original message without creating a duplicate.
+Sends a direct message. The Flutter client queues messages locally before calling this endpoint, then marks each local row `sent` or `failed` from the response. Reusing the same `client_message_id` for the same sender returns the original message without creating a duplicate, which allows failed local messages to retry safely.
 
 Request:
 

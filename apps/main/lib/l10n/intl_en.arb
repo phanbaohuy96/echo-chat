@@ -32,5 +32,7 @@
   "message": "Message",
   "user": "User",
   "refresh": "Refresh",
-  "send": "Send"
+  "send": "Send",
+  "sending": "Sending...",
+  "failedTapToRetry": "Failed. Tap to retry."
 }
