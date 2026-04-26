@@ -7,10 +7,30 @@ class ChatInteractorImpl extends ChatUsecase {
   final AppApiService appApiService;
 
   @override
-  Future<SendMessageResponse> sendMessage(String message) async {
+  Future<ChatUsersResponse> getPeers() async {
+    return ChatUsersResponse.fromJson(await appApiService.getChatUsers());
+  }
+
+  @override
+  Future<ChatConversationResponse> getConversation(String peerUserId) async {
+    return ChatConversationResponse.fromJson(
+      await appApiService.getChatMessages(peerUserId),
+    );
+  }
+
+  @override
+  Future<SendMessageResponse> sendMessage({
+    required String recipientUserId,
+    required String clientMessageId,
+    required String message,
+  }) async {
     return SendMessageResponse.fromJson(
       await appApiService.sendChatMessage(
-        SendMessageRequest(message: message).toJson(),
+        SendMessageRequest(
+          recipientUserId: recipientUserId,
+          clientMessageId: clientMessageId,
+          message: message,
+        ).toJson(),
       ),
     );
   }

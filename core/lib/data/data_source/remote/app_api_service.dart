@@ -24,6 +24,18 @@ class AppApiService {
     return restApi.me().then((value) => value as Map<String, dynamic>);
   }
 
+  Future<Map<String, dynamic>> getChatUsers() {
+    return restApi.getChatUsers().then(
+      (value) => value as Map<String, dynamic>,
+    );
+  }
+
+  Future<Map<String, dynamic>> getChatMessages(String peerUserId) {
+    return restApi
+        .getChatMessages(peerUserId)
+        .then((value) => value as Map<String, dynamic>);
+  }
+
   Future<Map<String, dynamic>> sendChatMessage(Map<String, dynamic> body) {
     return restApi
         .sendChatMessage(body)

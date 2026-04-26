@@ -5,13 +5,11 @@ part of 'chat_bloc.dart';
 @freezed
 sealed class _StateData with _$StateData {
   const factory _StateData({
-    @Default([
-      ChatMessage.assistant(
-        'Welcome to EchoChat. Sign up or sign in, then ask about Flutter, '
-        'BLoC, auth, or env setup.',
-      ),
-    ])
-    List<ChatMessage> messages,
+    @Default([]) List<UserModel> peers,
+    UserModel? selectedPeer,
+    @Default([]) List<ChatMessage> messages,
+    @Default(false) bool isLoadingPeers,
+    @Default(false) bool isLoadingMessages,
     @Default(false) bool isSending,
     String? errorMessage,
   }) = __StateData;
@@ -28,7 +26,15 @@ abstract class ChatState {
     return _factories[T == ChatState ? runtimeType : T]!(data ?? this.data);
   }
 
+  List<UserModel> get peers => data.peers;
+
+  UserModel? get selectedPeer => data.selectedPeer;
+
   List<ChatMessage> get messages => data.messages;
+
+  bool get isLoadingPeers => data.isLoadingPeers;
+
+  bool get isLoadingMessages => data.isLoadingMessages;
 
   bool get isSending => data.isSending;
 
@@ -46,9 +52,15 @@ final _factories = <Type, Function(_StateData data)>{
 class ChatMessage {
   const ChatMessage({required this.text, required this.isMine});
 
-  const ChatMessage.user(String text) : this(text: text, isMine: true);
-
-  const ChatMessage.assistant(String text) : this(text: text, isMine: false);
+  factory ChatMessage.fromDto(
+    ChatMessageDto message, {
+    required String? currentUserId,
+  }) {
+    return ChatMessage(
+      text: message.message,
+      isMine: message.senderUserId == currentUserId,
+    );
+  }
 
   final String text;
   final bool isMine;

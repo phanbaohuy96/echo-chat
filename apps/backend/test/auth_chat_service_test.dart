@@ -76,31 +76,193 @@ void main() {
       chatService = ChatService(store);
     });
 
-    test('returns a demo reply and stores the exchange', () {
-      final auth = authService.signup(
+    test('lists peers excluding the current user', () {
+      final jane = authService.signup(
         name: 'Jane Doe',
         username: 'jane',
         password: 'secret123',
       );
-
-      final reply = chatService.sendMessage(
-        user: auth.user,
-        message: 'How does Flutter BLoC work?',
+      authService.signup(
+        name: 'Bob Doe',
+        username: 'bob',
+        password: 'secret123',
       );
 
-      expect(reply, contains('BLoC'));
-      expect(store.messagesByUserId[auth.user.id], hasLength(2));
+      final peers = chatService.listPeers(user: jane.user);
+
+      expect(peers, hasLength(1));
+      expect(peers.single.username, 'bob');
+    });
+
+    test('sends and fetches a direct message conversation', () {
+      final jane = authService.signup(
+        name: 'Jane Doe',
+        username: 'jane',
+        password: 'secret123',
+      );
+      final bob = authService.signup(
+        name: 'Bob Doe',
+        username: 'bob',
+        password: 'secret123',
+      );
+
+      final sentMessage = chatService.sendMessage(
+        sender: jane.user,
+        recipientUserId: bob.user.id,
+        clientMessageId: 'jane-1',
+        message: 'Hello Bob',
+      );
+      chatService.sendMessage(
+        sender: bob.user,
+        recipientUserId: jane.user.id,
+        clientMessageId: 'bob-1',
+        message: 'Hi Jane',
+      );
+
+      final conversation = chatService.getConversation(
+        user: jane.user,
+        peerUserId: bob.user.id,
+      );
+
+      expect(conversation.peer.id, bob.user.id);
+      expect(conversation.messages, hasLength(2));
+      expect(conversation.messages.first.id, sentMessage.id);
+      expect(conversation.messages.map((message) => message.message), [
+        'Hello Bob',
+        'Hi Jane',
+      ]);
+    });
+
+    test('returns the existing message for an idempotent retry', () {
+      final jane = authService.signup(
+        name: 'Jane Doe',
+        username: 'jane',
+        password: 'secret123',
+      );
+      final bob = authService.signup(
+        name: 'Bob Doe',
+        username: 'bob',
+        password: 'secret123',
+      );
+
+      final firstMessage = chatService.sendMessage(
+        sender: jane.user,
+        recipientUserId: bob.user.id,
+        clientMessageId: 'jane-1',
+        message: 'Hello Bob',
+      );
+      final retriedMessage = chatService.sendMessage(
+        sender: jane.user,
+        recipientUserId: bob.user.id,
+        clientMessageId: 'jane-1',
+        message: 'Hello again',
+      );
+      final conversation = chatService.getConversation(
+        user: jane.user,
+        peerUserId: bob.user.id,
+      );
+
+      expect(retriedMessage.id, firstMessage.id);
+      expect(retriedMessage.message, 'Hello Bob');
+      expect(conversation.messages, hasLength(1));
     });
 
     test('rejects empty messages', () {
-      final auth = authService.signup(
+      final jane = authService.signup(
+        name: 'Jane Doe',
+        username: 'jane',
+        password: 'secret123',
+      );
+      final bob = authService.signup(
+        name: 'Bob Doe',
+        username: 'bob',
+        password: 'secret123',
+      );
+
+      expect(
+        () => chatService.sendMessage(
+          sender: jane.user,
+          recipientUserId: bob.user.id,
+          clientMessageId: 'jane-1',
+          message: '   ',
+        ),
+        throwsA(
+          isA<ChatException>().having(
+            (error) => error.statusCode,
+            'statusCode',
+            400,
+          ),
+        ),
+      );
+    });
+
+    test('rejects missing client message ids', () {
+      final jane = authService.signup(
+        name: 'Jane Doe',
+        username: 'jane',
+        password: 'secret123',
+      );
+      final bob = authService.signup(
+        name: 'Bob Doe',
+        username: 'bob',
+        password: 'secret123',
+      );
+
+      expect(
+        () => chatService.sendMessage(
+          sender: jane.user,
+          recipientUserId: bob.user.id,
+          clientMessageId: '   ',
+          message: 'Hello Bob',
+        ),
+        throwsA(
+          isA<ChatException>().having(
+            (error) => error.statusCode,
+            'statusCode',
+            400,
+          ),
+        ),
+      );
+    });
+
+    test('rejects invalid recipients', () {
+      final jane = authService.signup(
         name: 'Jane Doe',
         username: 'jane',
         password: 'secret123',
       );
 
       expect(
-        () => chatService.sendMessage(user: auth.user, message: '   '),
+        () => chatService.sendMessage(
+          sender: jane.user,
+          recipientUserId: 'missing',
+          clientMessageId: 'jane-1',
+          message: 'Hello',
+        ),
+        throwsA(
+          isA<ChatException>().having(
+            (error) => error.statusCode,
+            'statusCode',
+            404,
+          ),
+        ),
+      );
+    });
+
+    test('rejects self sends', () {
+      final jane = authService.signup(
+        name: 'Jane Doe',
+        username: 'jane',
+        password: 'secret123',
+      );
+
+      expect(
+        () => chatService.sendMessage(
+          sender: jane.user,
+          recipientUserId: jane.user.id,
+          clientMessageId: 'jane-1',
+          message: 'Note to self',
+        ),
         throwsA(
           isA<ChatException>().having(
             (error) => error.statusCode,

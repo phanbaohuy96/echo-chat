@@ -81,6 +81,18 @@ Response uses the same shape as signup.
 
 Requires `Authorization: Bearer <token>`.
 
+### List chat peers
+
+`GET /api/chat/users`
+
+Requires `Authorization: Bearer <token>` and returns public users except the authenticated account.
+
+### Fetch chat conversation
+
+`GET /api/chat/messages?peer_user_id=<id>`
+
+Requires `Authorization: Bearer <token>` and returns the selected peer plus ordered direct messages between the authenticated user and that peer.
+
 ### Send chat message
 
 `POST /api/chat/messages`
@@ -90,13 +102,26 @@ Requires `Authorization: Bearer <token>`.
 Request:
 
 ```json
-{ "message": "Hello" }
+{
+  "recipient_user_id": "user_2",
+  "client_message_id": "client_1",
+  "message": "Hello"
+}
 ```
 
 Response:
 
 ```json
-{ "reply": "Demo reply to: Hello" }
+{
+  "message": {
+    "id": "msg_1",
+    "sender_user_id": "user_1",
+    "recipient_user_id": "user_2",
+    "client_message_id": "client_1",
+    "message": "Hello",
+    "created_at": "2026-04-25T10:30:00.000Z"
+  }
+}
 ```
 
 ## Data flow
@@ -113,9 +138,9 @@ Signin/signup flow:
 
 Chat flow:
 
-1. User sends a message from chat screen.
-2. Chat BLoC appends the local user message.
-3. Chat BLoC calls `ChatUsecase`.
-4. `ChatUsecase` calls backend chat endpoint.
-5. Backend validates bearer token and returns a reply.
-6. Chat BLoC appends assistant reply.
+1. Chat screen loads available peers through `ChatUsecase`.
+2. User selects a peer and Chat BLoC fetches that conversation.
+3. User sends a message from the composer.
+4. Chat BLoC calls `ChatUsecase` with `recipient_user_id` and `client_message_id`.
+5. Backend validates bearer token, applies idempotency, stores the message, and returns it.
+6. Chat BLoC appends the returned message and refresh can reload the remote conversation.

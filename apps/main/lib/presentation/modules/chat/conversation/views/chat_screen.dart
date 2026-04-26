@@ -1,4 +1,5 @@
 import 'package:core/core.dart';
+import 'package:data_source/data_source.dart';
 import 'package:flutter/material.dart';
 
 import '../bloc/chat_bloc.dart';
@@ -18,6 +19,14 @@ class _ChatScreenState extends State<ChatScreen> {
   var _lastMessageCount = 0;
 
   ChatBloc get bloc => BlocProvider.of(context);
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => bloc.add(ChatStartedEvent()),
+    );
+  }
 
   @override
   void dispose() {
@@ -47,14 +56,33 @@ class _ChatScreenState extends State<ChatScreen> {
         }
       },
       builder: (context, state) {
+        final selectedPeer = state.selectedPeer;
         return Scaffold(
           appBar: AppBar(
-            title: const Text('EchoChat'),
+            title: Text(
+              selectedPeer == null
+                  ? 'EchoChat'
+                  : _peerDisplayName(selectedPeer),
+            ),
             automaticallyImplyLeading: false,
+            actions: [
+              IconButton(
+                onPressed: selectedPeer == null || state.isLoadingMessages
+                    ? null
+                    : () => bloc.add(ChatRefreshRequestedEvent()),
+                icon: state.isLoadingMessages
+                    ? const SizedBox.square(
+                        dimension: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.refresh),
+              ),
+            ],
           ),
           body: SafeArea(
             child: Column(
               children: [
+                _buildPeerSelector(state),
                 Expanded(child: _buildMessages(state)),
                 _buildComposer(state),
               ],
@@ -65,7 +93,56 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+  Widget _buildPeerSelector(ChatState state) {
+    if (state.isLoadingPeers) {
+      return const Padding(
+        padding: EdgeInsets.all(16),
+        child: LinearProgressIndicator(),
+      );
+    }
+    if (state.peers.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.all(16),
+        child: Text('Create another account to start a conversation.'),
+      );
+    }
+    return SizedBox(
+      height: 64,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        itemCount: state.peers.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          final peer = state.peers[index];
+          final selected = peer.id == state.selectedPeer?.id;
+          return ChoiceChip(
+            label: Text(_peerDisplayName(peer)),
+            selected: selected,
+            onSelected: selected || state.isLoadingMessages
+                ? null
+                : (_) => bloc.add(ChatPeerSelectedEvent(peer)),
+          );
+        },
+      ),
+    );
+  }
+
   Widget _buildMessages(ChatState state) {
+    if (state.isLoadingMessages && state.messages.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (state.selectedPeer == null) {
+      return const Center(child: Text('Select a user to start chatting.'));
+    }
+    if (state.messages.isEmpty) {
+      return Center(
+        child: Text(
+          'Start your conversation with '
+          '${_peerDisplayName(state.selectedPeer!)}.',
+        ),
+      );
+    }
     return ListView.separated(
       controller: _scrollController,
       padding: const EdgeInsets.all(16),
@@ -78,6 +155,7 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Widget _buildComposer(ChatState state) {
+    final canSend = state.selectedPeer != null && !state.isSending;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
       child: Row(
@@ -85,15 +163,16 @@ class _ChatScreenState extends State<ChatScreen> {
           Expanded(
             child: TextField(
               controller: _controller,
+              enabled: state.selectedPeer != null,
               minLines: 1,
               maxLines: 4,
-              decoration: const InputDecoration(hintText: 'Message EchoChat'),
+              decoration: const InputDecoration(hintText: 'Message'),
               onSubmitted: (_) => _send(),
             ),
           ),
           const SizedBox(width: 12),
           IconButton.filled(
-            onPressed: state.isSending ? null : _send,
+            onPressed: canSend ? _send : null,
             icon: state.isSending
                 ? const SizedBox.square(
                     dimension: 18,
@@ -124,6 +203,18 @@ class _ChatScreenState extends State<ChatScreen> {
       duration: const Duration(milliseconds: 250),
       curve: Curves.easeOut,
     );
+  }
+
+  String _peerDisplayName(UserModel peer) {
+    final name = peer.name?.trim();
+    if (name != null && name.isNotEmpty) {
+      return name;
+    }
+    final username = peer.username?.trim();
+    if (username != null && username.isNotEmpty) {
+      return username;
+    }
+    return 'User';
   }
 }
 

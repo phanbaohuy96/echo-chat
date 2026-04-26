@@ -4,7 +4,17 @@ part 'send_message_request.g.dart';
 
 @JsonSerializable(explicitToJson: true)
 class SendMessageRequest {
-  const SendMessageRequest({required this.message});
+  const SendMessageRequest({
+    required this.recipientUserId,
+    required this.clientMessageId,
+    required this.message,
+  });
+
+  @JsonKey(name: 'recipient_user_id')
+  final String recipientUserId;
+
+  @JsonKey(name: 'client_message_id')
+  final String clientMessageId;
 
   final String message;
 

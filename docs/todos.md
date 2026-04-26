@@ -55,19 +55,19 @@
 
 ## Phase 7 — Migrate to user-to-user chat
 
-- [ ] Replace backend chatbot message storage with 1:1 user message storage.
-- [ ] Add backend `BackendChatMessage` model.
-- [ ] Add peer listing through `GET /api/chat/users`.
-- [ ] Change `GET /api/chat/messages?peer_user_id=<id>` to fetch a conversation.
-- [ ] Change `POST /api/chat/messages` to send to `recipient_user_id` using `client_message_id` idempotency.
-- [ ] Add backend tests for peer listing, send, idempotent retry, conversation fetch, and invalid recipients.
-- [ ] Replace chatbot DTOs with user-to-user chat DTOs in `modules/data_source`.
-- [ ] Add `chatUsers` API contract and client API wrappers.
-- [ ] Refactor `ChatUsecase` around peers, conversations, and user-to-user sends.
-- [ ] Add chat domain message entity.
-- [ ] Update `ChatBloc` state/events for peers, selected peer, refresh, send, and error state.
-- [ ] Update chat UI with peer selector, refresh action, incoming/outgoing message rendering, and no-bot empty states.
-- [ ] Update `docs/backend-api.md` and `docs/architecture.md` for remote-first user-to-user chat.
+- [x] Replace backend chatbot message storage with 1:1 user message storage.
+- [x] Add backend `BackendChatMessage` model.
+- [x] Add peer listing through `GET /api/chat/users`.
+- [x] Change `GET /api/chat/messages?peer_user_id=<id>` to fetch a conversation.
+- [x] Change `POST /api/chat/messages` to send to `recipient_user_id` using `client_message_id` idempotency.
+- [x] Add backend tests for peer listing, send, idempotent retry, conversation fetch, and invalid recipients.
+- [x] Replace chatbot DTOs with user-to-user chat DTOs in `modules/data_source`.
+- [x] Add `chatUsers` API contract and client API wrappers.
+- [x] Refactor `ChatUsecase` around peers, conversations, and user-to-user sends.
+- [x] Add chat domain message entity.
+- [x] Update `ChatBloc` state/events for peers, selected peer, refresh, send, and error state.
+- [x] Update chat UI with peer selector, refresh action, incoming/outgoing message rendering, and no-bot empty states.
+- [x] Update `docs/backend-api.md` and `docs/architecture.md` for remote-first user-to-user chat.
 
 ## Phase 8 — Apply local-first best practice
 

@@ -97,29 +97,97 @@ Errors:
 
 ## Chat
 
-### `POST /api/chat/messages`
-
-Sends a message and returns a demo assistant reply.
-
-Headers:
+All chat endpoints require:
 
 ```text
 Authorization: Bearer <token>
 ```
 
+### `GET /api/chat/users`
+
+Returns users the current account can message. The authenticated user is excluded.
+
+Response `200`:
+
+```json
+{
+  "users": [
+    {
+      "id": "user_2",
+      "name": "Bob Doe",
+      "username": "bob"
+    }
+  ]
+}
+```
+
+Errors:
+
+- `401` missing or invalid token
+
+### `GET /api/chat/messages?peer_user_id=<id>`
+
+Returns the remote-first direct-message conversation with a peer.
+
+Response `200`:
+
+```json
+{
+  "peer": {
+    "id": "user_2",
+    "name": "Bob Doe",
+    "username": "bob"
+  },
+  "messages": [
+    {
+      "id": "msg_1",
+      "sender_user_id": "user_1",
+      "recipient_user_id": "user_2",
+      "client_message_id": "client_1",
+      "message": "Hello",
+      "created_at": "2026-04-25T10:30:00.000Z"
+    }
+  ]
+}
+```
+
+Errors:
+
+- `400` missing peer id or self-chat
+- `401` missing or invalid token
+- `404` peer not found
+
+### `POST /api/chat/messages`
+
+Sends a direct message. Reusing the same `client_message_id` for the same sender returns the original message without creating a duplicate.
+
 Request:
 
 ```json
-{ "message": "Hello" }
+{
+  "recipient_user_id": "user_2",
+  "client_message_id": "client_1",
+  "message": "Hello"
+}
 ```
 
 Response `200`:
 
 ```json
-{ "reply": "Demo reply to: Hello" }
+{
+  "message": {
+    "id": "msg_1",
+    "sender_user_id": "user_1",
+    "recipient_user_id": "user_2",
+    "client_message_id": "client_1",
+    "message": "Hello",
+    "created_at": "2026-04-25T10:30:00.000Z"
+  }
+}
 ```
 
 Errors:
 
-- `400` invalid or empty message
+- `400` invalid message, missing client message id, or self-chat
 - `401` missing or invalid token
+- `404` recipient not found

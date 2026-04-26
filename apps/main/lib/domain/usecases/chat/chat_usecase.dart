@@ -5,5 +5,13 @@ import 'package:injectable/injectable.dart';
 part 'chat_usecase.impl.dart';
 
 abstract class ChatUsecase {
-  Future<SendMessageResponse> sendMessage(String message);
+  Future<ChatUsersResponse> getPeers();
+
+  Future<ChatConversationResponse> getConversation(String peerUserId);
+
+  Future<SendMessageResponse> sendMessage({
+    required String recipientUserId,
+    required String clientMessageId,
+    required String message,
+  });
 }

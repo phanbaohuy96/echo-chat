@@ -321,7 +321,10 @@ run_web_staging:
 
 # Run the EchoChat backend
 run_backend:
-	cd apps/backend/; $(DART) run dart_frog dev
+	cd apps/backend/; $(DART) run dart_frog_cli:dart_frog dev
+
+run_backend_e2e:
+	cd apps/backend/; $(DART) run dart_frog_cli:dart_frog build; $(DART) build/bin/server.dart
 
 # Build web app
 build_web:

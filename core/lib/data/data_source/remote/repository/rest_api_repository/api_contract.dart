@@ -5,4 +5,5 @@ class ApiContract {
   static const String authSignup = '/api/auth/signup';
   static const String authMe = '/api/auth/me';
   static const String chatMessages = '/api/chat/messages';
+  static const String chatUsers = '/api/chat/users';
 }

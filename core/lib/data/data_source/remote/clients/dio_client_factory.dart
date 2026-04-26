@@ -59,8 +59,7 @@ class DioClientFactory {
     // Add retry interceptor for handling retries
     dio.interceptors.add(RetryInterceptor(dio: dio));
 
-    // Enable cookies
-    dio.options.extra['withCredentials'] = true;
+    dio.options.extra['withCredentials'] = false;
     return dio;
   }
 }
