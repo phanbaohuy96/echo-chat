@@ -5,45 +5,53 @@ import 'screen_theme.dart';
 import 'theme_color.dart';
 
 /// Type definitions for theme component builders
-typedef InputDecorationThemeBuilder = InputDecorationTheme Function({
-  required ThemeColor themeColor,
-  required AppTextTheme appTextTheme,
-});
+typedef InputDecorationThemeBuilder =
+    InputDecorationTheme Function({
+      required ThemeColor themeColor,
+      required AppTextTheme appTextTheme,
+    });
 
-typedef TextButtonThemeBuilder = TextButtonThemeData Function({
-  required AppTextTheme textTheme,
-  required ThemeColor themeColor,
-});
+typedef TextButtonThemeBuilder =
+    TextButtonThemeData Function({
+      required AppTextTheme textTheme,
+      required ThemeColor themeColor,
+    });
 
-typedef ElevatedButtonThemeBuilder = ElevatedButtonThemeData Function({
-  required ThemeColor themeColor,
-  required AppTextTheme textTheme,
-});
+typedef ElevatedButtonThemeBuilder =
+    ElevatedButtonThemeData Function({
+      required ThemeColor themeColor,
+      required AppTextTheme textTheme,
+    });
 
-typedef OutlinedButtonThemeBuilder = OutlinedButtonThemeData Function({
-  required ThemeColor themeColor,
-  required AppTextTheme textTheme,
-});
+typedef OutlinedButtonThemeBuilder =
+    OutlinedButtonThemeData Function({
+      required ThemeColor themeColor,
+      required AppTextTheme textTheme,
+    });
 
-typedef TabBarThemeBuilder = TabBarThemeData Function({
-  required AppTextTheme textTheme,
-  required ThemeColor themeColor,
-});
+typedef TabBarThemeBuilder =
+    TabBarThemeData Function({
+      required AppTextTheme textTheme,
+      required ThemeColor themeColor,
+    });
 
-typedef CheckboxThemeBuilder = CheckboxThemeData Function({
-  required ThemeColor themeColor,
-  required AppTextTheme textTheme,
-});
+typedef CheckboxThemeBuilder =
+    CheckboxThemeData Function({
+      required ThemeColor themeColor,
+      required AppTextTheme textTheme,
+    });
 
-typedef MenuThemeBuilder = MenuThemeData Function({
-  required ThemeColor themeColor,
-  required AppTextTheme textTheme,
-});
+typedef MenuThemeBuilder =
+    MenuThemeData Function({
+      required ThemeColor themeColor,
+      required AppTextTheme textTheme,
+    });
 
-typedef ChipThemeBuilder = ChipThemeData Function({
-  required ThemeColor themeColor,
-  required AppTextTheme textTheme,
-});
+typedef ChipThemeBuilder =
+    ChipThemeData Function({
+      required ThemeColor themeColor,
+      required AppTextTheme textTheme,
+    });
 
 /// Configuration class for creating AppTheme instances
 ///
@@ -153,12 +161,12 @@ class AppThemeConfig {
 /// ```
 class AppTheme {
   // Design constants for consistent UI elements
-  static const double _defaultBorderRadius = 8.0;
-  static const Size _minimumButtonSize = Size(88, 40);
-  static const EdgeInsets _buttonPadding = EdgeInsets.symmetric(horizontal: 16);
+  static const double _defaultBorderRadius = 16.0;
+  static const Size _minimumButtonSize = Size(88, 46);
+  static const EdgeInsets _buttonPadding = EdgeInsets.symmetric(horizontal: 20);
   static const EdgeInsets _inputPadding = EdgeInsets.symmetric(
-    horizontal: 12,
-    vertical: 6,
+    horizontal: 18,
+    vertical: 14,
   );
 
   /// Human-readable name for the theme (e.g., "light", "dark")
@@ -167,10 +175,7 @@ class AppTheme {
   /// The complete Flutter theme data
   final ThemeData theme;
 
-  const AppTheme({
-    required this.name,
-    required this.theme,
-  });
+  const AppTheme({required this.name, required this.theme});
 
   /// Primary factory method for creating AppTheme instances
   ///
@@ -390,19 +395,30 @@ class AppTheme {
     required ThemeColor themeColor,
   }) {
     return TextButtonThemeData(
-      style: TextButton.styleFrom(
-        textStyle: textTheme.buttonText,
-        minimumSize: _minimumButtonSize,
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        padding: EdgeInsets.zero,
-        shape: RoundedRectangleBorder(borderRadius: _borderRadius),
-      ).copyWith(
-        foregroundColor: WidgetStateProperty.resolveWith<Color?>(
-          (states) => states.contains(WidgetState.disabled)
-              ? themeColor.textButtonDisableColor
-              : themeColor.textButtonColor,
-        ),
-      ),
+      style:
+          TextButton.styleFrom(
+            textStyle: textTheme.buttonText,
+            minimumSize: _minimumButtonSize,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            shape: RoundedRectangleBorder(borderRadius: _borderRadius),
+          ).copyWith(
+            foregroundColor: WidgetStateProperty.resolveWith<Color?>(
+              (states) => states.contains(WidgetState.disabled)
+                  ? themeColor.textButtonDisableColor
+                  : themeColor.textButtonColor,
+            ),
+            overlayColor: WidgetStateProperty.resolveWith<Color?>((states) {
+              if (states.contains(WidgetState.pressed)) {
+                return themeColor.primary.withValues(alpha: 0.14);
+              }
+              if (states.contains(WidgetState.hovered) ||
+                  states.contains(WidgetState.focused)) {
+                return themeColor.primary.withValues(alpha: 0.08);
+              }
+              return null;
+            }),
+          ),
     );
   }
 
@@ -418,26 +434,43 @@ class AppTheme {
     required AppTextTheme textTheme,
   }) {
     return ElevatedButtonThemeData(
-      style: ElevatedButton.styleFrom(
-        disabledForegroundColor: themeColor.disableColor,
-        textStyle: textTheme.buttonText,
-        minimumSize: _minimumButtonSize,
-        padding: _buttonPadding,
-        shape: RoundedRectangleBorder(borderRadius: _borderRadius),
-        elevation: 0,
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      ).copyWith(
-        foregroundColor: WidgetStateProperty.resolveWith<Color?>(
-          (states) => states.contains(WidgetState.disabled)
-              ? themeColor.elevatedBtnForegroundDisableColor
-              : themeColor.elevatedBtnForegroundColor,
-        ),
-        backgroundColor: WidgetStateProperty.resolveWith<Color?>(
-          (states) => states.contains(WidgetState.disabled)
-              ? themeColor.elevatedBtnBackgroundDisableColor
-              : themeColor.elevatedBtnBackgroundColor,
-        ),
-      ),
+      style:
+          ElevatedButton.styleFrom(
+            disabledForegroundColor: themeColor.disableColor,
+            textStyle: textTheme.buttonText,
+            minimumSize: _minimumButtonSize,
+            padding: _buttonPadding,
+            shape: RoundedRectangleBorder(borderRadius: _borderRadius),
+            elevation: 0,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ).copyWith(
+            foregroundColor: WidgetStateProperty.resolveWith<Color?>(
+              (states) => states.contains(WidgetState.disabled)
+                  ? themeColor.elevatedBtnForegroundDisableColor
+                  : themeColor.elevatedBtnForegroundColor,
+            ),
+            backgroundColor: WidgetStateProperty.resolveWith<Color?>(
+              (states) => states.contains(WidgetState.disabled)
+                  ? themeColor.elevatedBtnBackgroundDisableColor
+                  : themeColor.elevatedBtnBackgroundColor,
+            ),
+            elevation: WidgetStateProperty.resolveWith<double>(
+              (states) => states.contains(WidgetState.pressed) ? 0 : 2,
+            ),
+            shadowColor: WidgetStateProperty.all(
+              themeColor.primary.withValues(alpha: 0.22),
+            ),
+            overlayColor: WidgetStateProperty.resolveWith<Color?>((states) {
+              if (states.contains(WidgetState.pressed)) {
+                return themeColor.onPrimary.withValues(alpha: 0.16);
+              }
+              if (states.contains(WidgetState.hovered) ||
+                  states.contains(WidgetState.focused)) {
+                return themeColor.onPrimary.withValues(alpha: 0.10);
+              }
+              return null;
+            }),
+          ),
     );
   }
 
@@ -452,31 +485,37 @@ class AppTheme {
     required AppTextTheme textTheme,
   }) {
     return OutlinedButtonThemeData(
-      style: OutlinedButton.styleFrom(
-        minimumSize: _minimumButtonSize,
-        padding: _buttonPadding,
-        textStyle: textTheme.buttonText,
-        shadowColor: themeColor.splashColor,
-        shape: RoundedRectangleBorder(borderRadius: _borderRadius),
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      ).copyWith(
-        foregroundColor: WidgetStateProperty.resolveWith<Color>(
-          (states) => states.contains(WidgetState.disabled)
-              ? themeColor.outlineButtonDisableColor
-              : themeColor.outlineButtonColor,
-        ),
-        backgroundColor: WidgetStateProperty.resolveWith<Color>(
-          (states) => themeColor.outlineButtonBackgroundColor,
-        ),
-        side: WidgetStateProperty.resolveWith<BorderSide>(
-          (states) {
-            final color = states.contains(WidgetState.disabled)
-                ? themeColor.outlineButtonDisableColor
-                : themeColor.outlineButtonColor;
-            return BorderSide(color: color, width: 1);
-          },
-        ),
-      ),
+      style:
+          OutlinedButton.styleFrom(
+            minimumSize: _minimumButtonSize,
+            padding: _buttonPadding,
+            textStyle: textTheme.buttonText,
+            shadowColor: themeColor.splashColor,
+            shape: RoundedRectangleBorder(borderRadius: _borderRadius),
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ).copyWith(
+            foregroundColor: WidgetStateProperty.resolveWith<Color>(
+              (states) => states.contains(WidgetState.disabled)
+                  ? themeColor.outlineButtonDisableColor
+                  : themeColor.outlineButtonColor,
+            ),
+            backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+              if (states.contains(WidgetState.pressed)) {
+                return themeColor.primary.withValues(alpha: 0.12);
+              }
+              if (states.contains(WidgetState.hovered) ||
+                  states.contains(WidgetState.focused)) {
+                return themeColor.primary.withValues(alpha: 0.08);
+              }
+              return themeColor.outlineButtonBackgroundColor;
+            }),
+            side: WidgetStateProperty.resolveWith<BorderSide>((states) {
+              final color = states.contains(WidgetState.disabled)
+                  ? themeColor.outlineButtonDisableColor
+                  : themeColor.outlineButtonColor;
+              return BorderSide(color: color, width: 1);
+            }),
+          ),
     );
   }
 
@@ -500,23 +539,56 @@ class AppTheme {
       BorderRadius borderRadius,
     ) {
       return OutlineInputBorder(
-        borderSide: BorderSide(color: color, width: 1),
+        borderSide: BorderSide(color: color, width: 1.2),
         borderRadius: borderRadius,
       );
     }
 
     return InputDecorationTheme(
+      filled: true,
+      fillColor: themeColor.cardBackground,
       border: _createInputBorder(themeColor.borderColor, bdRadius),
       enabledBorder: _createInputBorder(themeColor.borderColor, bdRadius),
-      focusedBorder: _createInputBorder(themeColor.primary, bdRadius),
-      disabledBorder: _createInputBorder(themeColor.disableColor, bdRadius),
+      focusedBorder: _createInputBorder(
+        themeColor.primary,
+        bdRadius,
+      ).copyWith(borderSide: BorderSide(color: themeColor.primary, width: 1.6)),
+      disabledBorder: _createInputBorder(
+        themeColor.disableColor.withValues(alpha: 0.44),
+        bdRadius,
+      ),
       errorBorder: _createInputBorder(
         appTextTheme.inputError?.color ?? Colors.red,
         bdRadius,
       ),
+      focusedErrorBorder:
+          _createInputBorder(
+            appTextTheme.inputError?.color ?? Colors.red,
+            bdRadius,
+          ).copyWith(
+            borderSide: BorderSide(
+              color: appTextTheme.inputError?.color ?? Colors.red,
+              width: 1.6,
+            ),
+          ),
       floatingLabelBehavior: FloatingLabelBehavior.auto,
       labelStyle: appTextTheme.inputTitle,
-      floatingLabelStyle: appTextTheme.inputTitle,
+      floatingLabelStyle: appTextTheme.inputTitle?.copyWith(
+        color: themeColor.primary,
+        fontWeight: FontWeight.w600,
+      ),
+      hintStyle: appTextTheme.inputHint,
+      errorStyle: appTextTheme.inputError,
+      prefixIconColor: WidgetStateColor.resolveWith(
+        (states) => states.contains(WidgetState.focused)
+            ? themeColor.primary
+            : themeColor.labelText,
+      ),
+      suffixIconColor: WidgetStateColor.resolveWith(
+        (states) => states.contains(WidgetState.focused)
+            ? themeColor.primary
+            : themeColor.labelText,
+      ),
       contentPadding: _inputPadding,
     );
   }
@@ -527,9 +599,7 @@ class AppTheme {
     required ThemeColor themeColor,
   }) {
     return TabBarThemeData(
-      labelStyle: textTheme.bodyMedium?.copyWith(
-        fontWeight: FontWeight.w600,
-      ),
+      labelStyle: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
       unselectedLabelStyle: textTheme.bodyMedium?.copyWith(
         fontWeight: FontWeight.normal,
       ),
@@ -584,25 +654,14 @@ class AppTheme {
       side: WidgetStateBorderSide.resolveWith((states) {
         // Border styling for unchecked state
         if (states.contains(WidgetState.disabled)) {
-          return BorderSide(
-            color: themeColor.checkboxDisabledColor,
-            width: 1,
-          );
+          return BorderSide(color: themeColor.checkboxDisabledColor, width: 1);
         }
         if (states.contains(WidgetState.selected)) {
-          return BorderSide(
-            color: themeColor.checkboxActiveColor,
-            width: 1,
-          );
+          return BorderSide(color: themeColor.checkboxActiveColor, width: 1);
         }
-        return BorderSide(
-          color: themeColor.checkboxBorderColor,
-          width: 1,
-        );
+        return BorderSide(color: themeColor.checkboxBorderColor, width: 1);
       }),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(4),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
       visualDensity: VisualDensity.compact,
     );
@@ -627,31 +686,26 @@ class AppTheme {
       secondarySelectedColor: themeColor.chipSelectedColor.withValues(
         alpha: 0.12,
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       labelStyle: textTheme.bodyMedium?.copyWith(
         color: themeColor.chipLabelColor,
+        fontWeight: FontWeight.w500,
       ),
       secondaryLabelStyle: textTheme.bodySmall?.copyWith(
         color: themeColor.chipLabelColor,
       ),
       brightness: themeColor.brightness,
       elevation: 0,
-      pressElevation: 1,
+      pressElevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: themeColor.chipBorderColor,
-          width: 1,
-        ),
+        borderRadius: BorderRadius.circular(18),
+        side: BorderSide(color: themeColor.chipBorderColor, width: 1),
       ),
       selectedShadowColor: Colors.transparent,
-      showCheckmark: true,
+      showCheckmark: false,
       checkmarkColor: themeColor.checkboxCheckColor,
       deleteIconColor: themeColor.deleteIconColor,
-      iconTheme: IconThemeData(
-        color: themeColor.chipLabelColor,
-        size: 18,
-      ),
+      iconTheme: IconThemeData(color: themeColor.chipLabelColor, size: 18),
     );
   }
 
@@ -669,9 +723,7 @@ class AppTheme {
   }) {
     return MenuThemeData(
       style: MenuStyle(
-        backgroundColor: WidgetStateProperty.all(
-          themeColor.cardBackground,
-        ),
+        backgroundColor: WidgetStateProperty.all(themeColor.cardBackground),
         elevation: WidgetStateProperty.all(8.0),
         shadowColor: WidgetStateProperty.all(
           themeColor.shadowColor.withValues(alpha: 0.16),
@@ -689,12 +741,8 @@ class AppTheme {
         padding: WidgetStateProperty.all(
           const EdgeInsets.symmetric(vertical: 8.0),
         ),
-        maximumSize: WidgetStateProperty.all(
-          const Size(double.infinity, 300),
-        ),
-        minimumSize: WidgetStateProperty.all(
-          const Size(120, 0),
-        ),
+        maximumSize: WidgetStateProperty.all(const Size(double.infinity, 300)),
+        minimumSize: WidgetStateProperty.all(const Size(120, 0)),
       ),
     );
   }
@@ -735,48 +783,40 @@ class AppTheme {
     return MenuButtonThemeData(
       style: ButtonStyle(
         textStyle: WidgetStateProperty.all(textTheme.bodyMedium),
-        foregroundColor: WidgetStateProperty.resolveWith<Color>(
-          (states) {
-            if (states.contains(WidgetState.disabled)) {
-              return themeColor.disableColor;
-            }
-            if (states.contains(WidgetState.pressed) ||
-                states.contains(WidgetState.hovered)) {
-              return themeColor.primary;
-            }
-            return themeColor.textButtonColor;
-          },
-        ),
-        backgroundColor: WidgetStateProperty.resolveWith<Color>(
-          (states) {
-            if (states.contains(WidgetState.hovered)) {
-              return themeColor.primary.withValues(alpha: 0.08);
-            }
-            if (states.contains(WidgetState.pressed)) {
-              return themeColor.primary.withValues(alpha: 0.12);
-            }
-            return Colors.transparent;
-          },
-        ),
-        overlayColor: WidgetStateProperty.resolveWith<Color>(
-          (states) {
-            if (states.contains(WidgetState.pressed)) {
-              return themeColor.primary.withValues(alpha: 0.12);
-            }
-            if (states.contains(WidgetState.hovered)) {
-              return themeColor.primary.withValues(alpha: 0.08);
-            }
-            return Colors.transparent;
-          },
-        ),
+        foregroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+          if (states.contains(WidgetState.disabled)) {
+            return themeColor.disableColor;
+          }
+          if (states.contains(WidgetState.pressed) ||
+              states.contains(WidgetState.hovered)) {
+            return themeColor.primary;
+          }
+          return themeColor.textButtonColor;
+        }),
+        backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
+          if (states.contains(WidgetState.hovered)) {
+            return themeColor.primary.withValues(alpha: 0.08);
+          }
+          if (states.contains(WidgetState.pressed)) {
+            return themeColor.primary.withValues(alpha: 0.12);
+          }
+          return Colors.transparent;
+        }),
+        overlayColor: WidgetStateProperty.resolveWith<Color>((states) {
+          if (states.contains(WidgetState.pressed)) {
+            return themeColor.primary.withValues(alpha: 0.12);
+          }
+          if (states.contains(WidgetState.hovered)) {
+            return themeColor.primary.withValues(alpha: 0.08);
+          }
+          return Colors.transparent;
+        }),
         padding: WidgetStateProperty.all(
           const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         ),
         minimumSize: WidgetStateProperty.all(const Size(0, 36)),
         shape: WidgetStateProperty.all(
-          RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(6),
-          ),
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
         ),
         elevation: WidgetStateProperty.all(0),
         visualDensity: VisualDensity.compact,
@@ -789,13 +829,7 @@ class AppTheme {
   ///
   /// Useful for creating theme variations or overriding specific properties
   /// while maintaining the rest of the theme configuration.
-  AppTheme copyWith({
-    String? name,
-    ThemeData? theme,
-  }) {
-    return AppTheme(
-      name: name ?? this.name,
-      theme: theme ?? this.theme,
-    );
+  AppTheme copyWith({String? name, ThemeData? theme}) {
+    return AppTheme(name: name ?? this.name, theme: theme ?? this.theme);
   }
 }

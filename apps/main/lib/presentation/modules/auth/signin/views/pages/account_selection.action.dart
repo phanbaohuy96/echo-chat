@@ -2,13 +2,13 @@ part of 'account_selection.dart';
 
 extension AccountSelectionAction on _AccountSelectionState {
   Future<void> _handleLogin() async {
-    final username = _usernameController.text.trim();
-    final password = _passwordController.text;
-    if (username.isEmpty || password.isEmpty) {
-      showSnackBar(context: context, message: l10n.usernamePasswordRequired);
+    if (_isSubmitting || _formKey.currentState?.validate() != true) {
       return;
     }
+    final username = _usernameController.text.trim();
+    final password = _passwordController.text;
 
+    _setSubmitting(true);
     final completer = Completer<AuthResponse>();
     bloc.add(
       LoginEvent(username: username, password: password, completer: completer),
@@ -19,6 +19,10 @@ extension AccountSelectionAction on _AccountSelectionState {
       result = await completer.future;
     } catch (_) {
       return;
+    } finally {
+      if (mounted) {
+        _setSubmitting(false);
+      }
     }
 
     switch (result.result) {

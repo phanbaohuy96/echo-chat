@@ -12,10 +12,7 @@ class LocalizationModel {
   @JsonKey(name: 'vi')
   final String? vi;
 
-  const LocalizationModel({
-    this.en,
-    this.vi,
-  });
+  const LocalizationModel({this.en, this.vi});
 
   String? localized(String languageCode) {
     if (languageCode == AppLocale.en.languageCode) {
@@ -27,13 +24,8 @@ class LocalizationModel {
     return null;
   }
 
-  factory LocalizationModel.fromValue({
-    required String value,
-  }) {
-    return LocalizationModel(
-      en: value,
-      vi: value,
-    );
+  factory LocalizationModel.fromValue({required String value}) {
+    return LocalizationModel(en: value, vi: value);
   }
 
   factory LocalizationModel.fromJson(Map<String, dynamic> json) =>

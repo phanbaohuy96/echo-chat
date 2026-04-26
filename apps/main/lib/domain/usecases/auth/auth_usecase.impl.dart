@@ -64,5 +64,4 @@ class AuthInteractorImpl extends AuthUsecase {
     await localDataManager.saveUserInfo(result.user);
     return AuthSuccessResponse(user: result.user);
   }
-
 }

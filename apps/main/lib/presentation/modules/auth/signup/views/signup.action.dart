@@ -2,17 +2,14 @@ part of 'signup_screen.dart';
 
 extension SignUpAction on _SignUpScreenState {
   Future<void> _handleSignup() async {
+    if (_isSubmitting || _formKey.currentState?.validate() != true) {
+      return;
+    }
     final name = _nameController.text.trim();
     final username = _usernameController.text.trim();
     final password = _passwordController.text;
-    if (name.isEmpty || username.isEmpty || password.isEmpty) {
-      showSnackBar(
-        context: context,
-        message: l10n.nameUsernamePasswordRequired,
-      );
-      return;
-    }
 
+    _setSubmitting(true);
     final completer = Completer<AuthResponse>();
     bloc.add(
       SignupSubmittedEvent(
@@ -27,6 +24,10 @@ extension SignUpAction on _SignUpScreenState {
       result = await completer.future;
     } catch (_) {
       return;
+    } finally {
+      if (mounted) {
+        _setSubmitting(false);
+      }
     }
     if (result is AuthSuccessResponse) {
       await context.openChat(
