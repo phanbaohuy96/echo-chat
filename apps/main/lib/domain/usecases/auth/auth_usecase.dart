@@ -27,5 +27,4 @@ abstract class AuthUsecase {
   });
 
   Future<AuthResponse> authWithUserToken(UserToken token);
-
 }

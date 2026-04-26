@@ -7,15 +7,12 @@ EchoChat is a demo Flutter chat app built around **local-first messaging**. The 
 <p>
   <img src="docs/showcase/signin-mobile.png" alt="EchoChat sign-in on mobile" width="220" />
   <img src="docs/showcase/signup-mobile.png" alt="EchoChat sign-up on mobile" width="220" />
+  <img src="docs/showcase/chat-mobile.png" alt="EchoChat chat on mobile" width="220" />
 </p>
 
 <p>
   <img src="docs/showcase/signin-desktop.png" alt="EchoChat sign-in on desktop" width="420" />
   <img src="docs/showcase/chat-desktop.png" alt="EchoChat chat on desktop" width="420" />
-</p>
-
-<p>
-  <img src="docs/showcase/notfound-desktop.png" alt="EchoChat not-found state on desktop" width="420" />
 </p>
 
 ## Local-first workflow

@@ -55,10 +55,26 @@ class MainAppTheme {
       },
     ).let(
       (textTheme) => textTheme.copyWithTypography(
-        inputTitle: textTheme.bodyMedium,
+        titleLarge: textTheme.titleLarge?.copyWith(
+          fontSize: 24,
+          fontWeight: FontWeight.w700,
+        ),
+        titleMedium: textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.w700,
+        ),
+        bodyMedium: textTheme.bodyMedium?.copyWith(height: 1.45),
+        inputTitle: textTheme.bodyMedium?.copyWith(
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+        ),
+        inputHint: textTheme.bodyMedium?.copyWith(color: themeColor.labelText),
+        inputError: textTheme.labelMedium?.copyWith(
+          color: themeColor.error,
+          fontWeight: FontWeight.w600,
+        ),
         buttonText: textTheme.bodyMedium?.copyWith(
           fontSize: 15,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
         ),
       ),
     );

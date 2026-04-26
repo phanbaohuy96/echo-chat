@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:core/core.dart';
 import 'package:flutter/material.dart';
+import 'package:iconsax/iconsax.dart';
 
 class AuthFormShell extends StatelessWidget {
   const AuthFormShell({super.key, required this.child});
@@ -17,8 +18,8 @@ class AuthFormShell extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            colors.primary.withValues(alpha: 0.16),
-            colors.secondary.withValues(alpha: 0.54),
+            colors.primary.withValues(alpha: 0.12),
+            colors.secondary.withValues(alpha: 0.50),
             colors.scaffoldBackgroundColor,
           ],
         ),
@@ -38,27 +39,38 @@ class AuthFormShell extends StatelessWidget {
                 horizontal: horizontalPadding,
                 vertical: isWide ? 40 : 24,
               ),
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: colors.cardBackground,
-                  borderRadius: BorderRadius.circular(32),
-                  border: Border.all(
-                    color: colors.onSurface.withValues(alpha: 0.06),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: colors.primary.withValues(alpha: 0.10),
-                      blurRadius: 36,
-                      offset: const Offset(0, 18),
+              child: TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0, end: 1),
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeOutCubic,
+                builder: (context, value, child) {
+                  return Transform.translate(
+                    offset: Offset(0, 12 * (1 - value)),
+                    child: Opacity(opacity: value, child: child),
+                  );
+                },
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: colors.cardBackground,
+                    borderRadius: BorderRadius.circular(isWide ? 34 : 28),
+                    border: Border.all(
+                      color: colors.onSurface.withValues(alpha: 0.07),
                     ),
-                  ],
-                ),
-                child: Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: isWide ? 34 : 24,
-                    vertical: isWide ? 36 : 30,
+                    boxShadow: [
+                      BoxShadow(
+                        color: colors.shadowColor.withValues(alpha: 0.18),
+                        blurRadius: 42,
+                        offset: const Offset(0, 22),
+                      ),
+                    ],
                   ),
-                  child: SizedBox(width: formWidth, child: child),
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isWide ? 36 : 22,
+                      vertical: isWide ? 38 : 28,
+                    ),
+                    child: SizedBox(width: formWidth, child: child),
+                  ),
                 ),
               ),
             ),
@@ -86,26 +98,26 @@ class AuthBrandHeader extends StatelessWidget {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [colors.primary, colors.primary.withValues(alpha: 0.72)],
+              colors: [colors.primary, colors.primaryVariant],
             ),
             boxShadow: [
               BoxShadow(
-                color: colors.primary.withValues(alpha: 0.22),
-                blurRadius: 24,
-                offset: const Offset(0, 12),
+                color: colors.primary.withValues(alpha: 0.26),
+                blurRadius: 26,
+                offset: const Offset(0, 14),
               ),
             ],
           ),
           child: Padding(
-            padding: const EdgeInsets.all(18),
+            padding: const EdgeInsets.all(17),
             child: Icon(
-              Icons.chat_bubble_outline,
+              Iconsax.message_text,
               color: colors.onPrimary,
-              size: 34,
+              size: 32,
             ),
           ),
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: 16),
         Text(
           title,
           textAlign: TextAlign.center,
