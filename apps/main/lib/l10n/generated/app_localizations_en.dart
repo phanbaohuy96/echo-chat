@@ -56,4 +56,60 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get thisRoleIsNotSupportedYet => 'This role is not supported yet.';
+
+  @override
+  String get appName => 'EchoChat';
+
+  @override
+  String get name => 'Name';
+
+  @override
+  String get username => 'Username';
+
+  @override
+  String get password => 'Password';
+
+  @override
+  String get createAccount => 'Create an account';
+
+  @override
+  String get createEchoChatAccount => 'Create EchoChat account';
+
+  @override
+  String get signUp => 'Sign up';
+
+  @override
+  String get alreadyHaveAccount => 'I already have an account';
+
+  @override
+  String get usernamePasswordRequired => 'Username and password are required.';
+
+  @override
+  String get nameUsernamePasswordRequired =>
+      'Name, username, and password are required.';
+
+  @override
+  String get signUpFailed => 'Sign up failed.';
+
+  @override
+  String get createAnotherAccountToStartConversation =>
+      'Create another account to start a conversation.';
+
+  @override
+  String get selectUserToStartChatting => 'Select a user to start chatting.';
+
+  @override
+  String get startConversationWith => 'Start your conversation with';
+
+  @override
+  String get message => 'Message';
+
+  @override
+  String get user => 'User';
+
+  @override
+  String get refresh => 'Refresh';
+
+  @override
+  String get send => 'Send';
 }

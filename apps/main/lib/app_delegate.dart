@@ -25,8 +25,8 @@ class AppDelegate {
 
         await configureDependencies(env: Config.instance.appConfig.envName);
 
-        setLocaleMessages(AppLocale.th.languageCode, ThMessages());
         setLocaleMessages(AppLocale.en.languageCode, EnMessages());
+        setLocaleMessages(AppLocale.vi.languageCode, ViMessages());
 
         setDefaultLocale(AppLocale.defaultLocale.languageCode);
 

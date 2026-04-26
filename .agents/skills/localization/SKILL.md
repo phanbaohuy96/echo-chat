@@ -25,12 +25,12 @@ The CSV is the source of truth — **never** hand-edit the generated ARB or Dart
 apps/main/lib/l10n/
 ├── localizations.csv        # source of truth
 ├── intl_en.arb              # generated from CSV
-├── intl_th.arb              # generated from CSV
+├── intl_vi.arb              # generated from CSV
 ├── localization_ext.dart    # context.l10n extension
 └── generated/
     ├── app_localizations.dart
     ├── app_localizations_en.dart
-    └── app_localizations_th.dart
+    └── app_localizations_vi.dart
 ```
 
 `l10n.yaml` (in `apps/main/`) wires the generation step. After editing `localizations.csv`:
@@ -43,14 +43,14 @@ That regenerates `intl_*.arb` and the `AppLocalizations` Dart files.
 
 ## CSV format
 
-The header is `key,en,th` (extend with more locale columns as locales are added). One row per string.
+The header is `key,en,vi` (extend with more locale columns as locales are added). One row per string.
 
 ```csv
-key,en,th
-inform,Inform,แจ้งเตือน
-ok,Ok,ตกลง
-loginRequired,Please login to continue,กรุณาเข้าสู่ระบบเพื่อดำเนินการต่อ
-welcomeMessage,"Welcome, {0}!","สวัสดี {0}!"
+key,en,vi
+inform,Inform,Thông báo
+ok,Ok,Đồng ý
+loginRequired,Please login to continue,Vui lòng đăng nhập để tiếp tục
+welcomeMessage,"Welcome, {0}!","Chào mừng, {0}!"
 ```
 
 Rules:
@@ -62,28 +62,26 @@ Rules:
 
 ## Using strings in the UI
 
-The screen-state `StateBase` already exposes `trans` via the generator template:
-
-```dart
-class _FeatureScreenState extends StateBase<FeatureScreen> {
-  late AppLocalizations trans;
-
-  @override
-  Widget build(BuildContext context) {
-    trans = translate(context);
-    return ScreenForm(title: trans.featureTitle, child: ...);
-  }
-}
-```
-
-Outside a `StateBase` (or in a child widget), use the `BuildContext` extension:
+Use the `l10n` extension from `localization_ext.dart` instead of caching `AppLocalizations` as mutable state:
 
 ```dart
 import '<path>/l10n/localization_ext.dart';
 
+class _FeatureScreenState extends StateBase<FeatureScreen> {
+  @override
+  Widget build(BuildContext context) {
+    return ScreenForm(title: l10n.featureTitle, child: ...);
+  }
+}
+```
+
+For methods with many localized strings, a local variable is fine:
+
+```dart
 @override
 Widget build(BuildContext context) {
-  return Text(context.l10n.welcomeMessage('Huy'));
+  final l10n = context.l10n;
+  return Text(l10n.welcomeMessage('Huy'));
 }
 ```
 
@@ -110,7 +108,7 @@ See `tools/module_generator/bin/generate_translation_csv.dart` and `apply_transl
 - [ ] Key added to `localizations.csv` with values for every existing locale column.
 - [ ] No translation entered into the generated `*.arb` or `app_localizations_*.dart` files.
 - [ ] `make lang` run; generated files staged.
-- [ ] Use site reaches strings via `trans.<key>` or `context.l10n.<key>`, never a hardcoded `Text('...')`.
+- [ ] Use site reaches strings via `l10n.<key>` or `context.l10n.<key>`, never a hardcoded `Text('...')`.
 - [ ] Parameters use positional `{0}`, `{1}`.
 
 ## Common mistakes

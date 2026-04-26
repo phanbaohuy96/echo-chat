@@ -30,7 +30,7 @@ class ChatBloc extends AppBlocBase<ChatEvent, ChatState> {
   ) async {
     emit(
       state.copyWith(
-        data: state.data.copyWith(isLoadingPeers: true, errorMessage: null),
+        data: state.data.copyWith(isLoadingPeers: true),
       ),
     );
 
@@ -50,13 +50,10 @@ class ChatBloc extends AppBlocBase<ChatEvent, ChatState> {
       if (selectedPeer != null) {
         await _loadConversation(selectedPeer, emit);
       }
-    } catch (_) {
+    } finally {
       emit(
         state.copyWith(
-          data: state.data.copyWith(
-            isLoadingPeers: false,
-            errorMessage: 'Could not load chat users.',
-          ),
+          data: state.data.copyWith(isLoadingPeers: false),
         ),
       );
     }
@@ -74,7 +71,6 @@ class ChatBloc extends AppBlocBase<ChatEvent, ChatState> {
         data: state.data.copyWith(
           selectedPeer: event.peer,
           messages: [],
-          errorMessage: null,
         ),
       ),
     );
@@ -105,7 +101,7 @@ class ChatBloc extends AppBlocBase<ChatEvent, ChatState> {
 
     emit(
       state.copyWith(
-        data: state.data.copyWith(isSending: true, errorMessage: null),
+        data: state.data.copyWith(isSending: true),
       ),
     );
 
@@ -125,17 +121,13 @@ class ChatBloc extends AppBlocBase<ChatEvent, ChatState> {
                 currentUserId: localDataManager.userInfo?.id,
               ),
             ),
-            isSending: false,
           ),
         ),
       );
-    } catch (_) {
+    } finally {
       emit(
         state.copyWith(
-          data: state.data.copyWith(
-            isSending: false,
-            errorMessage: 'Could not send message.',
-          ),
+          data: state.data.copyWith(isSending: false),
         ),
       );
     }
@@ -147,17 +139,12 @@ class ChatBloc extends AppBlocBase<ChatEvent, ChatState> {
   ) async {
     final peerUserId = peer.id;
     if (peerUserId == null) {
-      emit(
-        state.copyWith(
-          data: state.data.copyWith(errorMessage: 'Could not load messages.'),
-        ),
-      );
       return;
     }
 
     emit(
       state.copyWith(
-        data: state.data.copyWith(isLoadingMessages: true, errorMessage: null),
+        data: state.data.copyWith(isLoadingMessages: true),
       ),
     );
 
@@ -176,17 +163,13 @@ class ChatBloc extends AppBlocBase<ChatEvent, ChatState> {
                   ),
                 )
                 .toList(),
-            isLoadingMessages: false,
           ),
         ),
       );
-    } catch (_) {
+    } finally {
       emit(
         state.copyWith(
-          data: state.data.copyWith(
-            isLoadingMessages: false,
-            errorMessage: 'Could not load messages.',
-          ),
+          data: state.data.copyWith(isLoadingMessages: false),
         ),
       );
     }

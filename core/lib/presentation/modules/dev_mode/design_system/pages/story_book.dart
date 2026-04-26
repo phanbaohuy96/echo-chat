@@ -200,11 +200,11 @@ class _WidgetStoryBookState extends State<WidgetStoryBook> {
             child: EnViSwitch(
               isVILanguage:
                   context.read<AppGlobalBloc>().state.locale.languageCode ==
-                      AppLocale.th.languageCode,
+                      AppLocale.vi.languageCode,
               onChanged: (isViLanguage) {
                 context
                     .read<AppGlobalBloc>()
-                    .changeLocale(isViLanguage ? AppLocale.th : AppLocale.en);
+                    .changeLocale(isViLanguage ? AppLocale.vi : AppLocale.en);
               },
             ),
           );

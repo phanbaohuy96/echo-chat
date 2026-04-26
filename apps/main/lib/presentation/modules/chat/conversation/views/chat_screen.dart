@@ -2,7 +2,11 @@ import 'package:core/core.dart';
 import 'package:data_source/data_source.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../../l10n/localization_ext.dart';
+import '../../../../base/base.dart';
 import '../bloc/chat_bloc.dart';
+
+part 'chat.action.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -13,12 +17,17 @@ class ChatScreen extends StatefulWidget {
   State<ChatScreen> createState() => _ChatScreenState();
 }
 
-class _ChatScreenState extends State<ChatScreen> {
+class _ChatScreenState extends StateBase<ChatScreen> {
   final _controller = TextEditingController();
   final _scrollController = ScrollController();
   var _lastMessageCount = 0;
 
+  @override
   ChatBloc get bloc => BlocProvider.of(context);
+
+  late ThemeData _themeData;
+
+  TextTheme get textTheme => _themeData.textTheme;
 
   @override
   void initState() {
@@ -37,49 +46,36 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    _themeData = context.theme;
+
     return BlocConsumer<ChatBloc, ChatState>(
       listenWhen: (previous, current) {
-        return previous.errorMessage != current.errorMessage ||
-            previous.messages.length != current.messages.length;
+        return previous.messages.length != current.messages.length;
       },
-      listener: (context, state) {
-        if (state.errorMessage != null) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(state.errorMessage!)));
-        }
-        if (state.messages.length != _lastMessageCount) {
-          _lastMessageCount = state.messages.length;
-          WidgetsBinding.instance.addPostFrameCallback(
-            (_) => _scrollToBottom(),
-          );
-        }
-      },
+      listener: _blocListener,
       builder: (context, state) {
         final selectedPeer = state.selectedPeer;
-        return Scaffold(
-          appBar: AppBar(
-            title: Text(
-              selectedPeer == null
-                  ? 'EchoChat'
-                  : _peerDisplayName(selectedPeer),
+        return ScreenForm(
+          title: selectedPeer == null
+              ? l10n.appName
+              : _peerDisplayName(selectedPeer),
+          showBackButton: false,
+          actions: [
+            IconButton(
+              tooltip: l10n.refresh,
+              onPressed: selectedPeer == null || state.isLoadingMessages
+                  ? null
+                  : _refreshConversation,
+              icon: state.isLoadingMessages
+                  ? const SizedBox.square(
+                      dimension: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.refresh),
             ),
-            automaticallyImplyLeading: false,
-            actions: [
-              IconButton(
-                onPressed: selectedPeer == null || state.isLoadingMessages
-                    ? null
-                    : () => bloc.add(ChatRefreshRequestedEvent()),
-                icon: state.isLoadingMessages
-                    ? const SizedBox.square(
-                        dimension: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.refresh),
-              ),
-            ],
-          ),
-          body: SafeArea(
+          ],
+          child: SafeArea(
+            top: false,
             child: Column(
               children: [
                 _buildPeerSelector(state),
@@ -101,9 +97,9 @@ class _ChatScreenState extends State<ChatScreen> {
       );
     }
     if (state.peers.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.all(16),
-        child: Text('Create another account to start a conversation.'),
+      return Padding(
+        padding: const EdgeInsets.all(16),
+        child: Text(l10n.createAnotherAccountToStartConversation),
       );
     }
     return SizedBox(
@@ -121,7 +117,7 @@ class _ChatScreenState extends State<ChatScreen> {
             selected: selected,
             onSelected: selected || state.isLoadingMessages
                 ? null
-                : (_) => bloc.add(ChatPeerSelectedEvent(peer)),
+                : (_) => _selectPeer(peer),
           );
         },
       ),
@@ -133,12 +129,12 @@ class _ChatScreenState extends State<ChatScreen> {
       return const Center(child: CircularProgressIndicator());
     }
     if (state.selectedPeer == null) {
-      return const Center(child: Text('Select a user to start chatting.'));
+      return Center(child: Text(l10n.selectUserToStartChatting));
     }
     if (state.messages.isEmpty) {
       return Center(
         child: Text(
-          'Start your conversation with '
+          '${l10n.startConversationWith} '
           '${_peerDisplayName(state.selectedPeer!)}.',
         ),
       );
@@ -166,13 +162,14 @@ class _ChatScreenState extends State<ChatScreen> {
               enabled: state.selectedPeer != null,
               minLines: 1,
               maxLines: 4,
-              decoration: const InputDecoration(hintText: 'Message'),
+              decoration: InputDecoration(hintText: l10n.message),
               onSubmitted: (_) => _send(),
             ),
           ),
           const SizedBox(width: 12),
           IconButton.filled(
             onPressed: canSend ? _send : null,
+            tooltip: l10n.send,
             icon: state.isSending
                 ? const SizedBox.square(
                     dimension: 18,
@@ -185,26 +182,6 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  void _send() {
-    final message = _controller.text.trim();
-    if (message.isEmpty) {
-      return;
-    }
-    _controller.clear();
-    bloc.add(ChatMessageSubmittedEvent(message));
-  }
-
-  void _scrollToBottom() {
-    if (!_scrollController.hasClients) {
-      return;
-    }
-    _scrollController.animateTo(
-      _scrollController.position.maxScrollExtent,
-      duration: const Duration(milliseconds: 250),
-      curve: Curves.easeOut,
-    );
-  }
-
   String _peerDisplayName(UserModel peer) {
     final name = peer.name?.trim();
     if (name != null && name.isNotEmpty) {
@@ -214,7 +191,7 @@ class _ChatScreenState extends State<ChatScreen> {
     if (username != null && username.isNotEmpty) {
       return username;
     }
-    return 'User';
+    return l10n.user;
   }
 }
 
@@ -225,8 +202,8 @@ class _MessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final colors = context.themeColor;
+    final textTheme = context.textTheme;
     return Align(
       alignment: message.isMine ? Alignment.centerRight : Alignment.centerLeft,
       child: ConstrainedBox(
@@ -235,19 +212,15 @@ class _MessageBubble extends StatelessWidget {
         ),
         child: DecoratedBox(
           decoration: BoxDecoration(
-            color: message.isMine
-                ? colorScheme.primary
-                : colorScheme.surfaceContainerHighest,
+            color: message.isMine ? colors.primary : colors.cardBackground,
             borderRadius: BorderRadius.circular(18),
           ),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             child: Text(
               message.text,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: message.isMine
-                    ? colorScheme.onPrimary
-                    : colorScheme.onSurfaceVariant,
+              style: textTheme.bodyMedium?.copyWith(
+                color: message.isMine ? colors.onPrimary : colors.onSurface,
               ),
             ),
           ),

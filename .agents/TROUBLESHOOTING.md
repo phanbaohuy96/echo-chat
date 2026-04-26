@@ -156,7 +156,7 @@ run `make lang`.
 ### `{name}` placeholder is rendered literally
 
 Parameters are positional in this generator — use `{0}`, `{1}`, …, then
-call `trans.welcomeMessage('Huy')` with the same number of positional
+call `l10n.welcomeMessage('Huy')` with the same number of positional
 arguments.
 
 ---

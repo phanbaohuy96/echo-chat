@@ -2,9 +2,7 @@ import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../../domain/entities/auth/response.dart';
-import '../../../../../l10n/localization_ext.dart';
 import '../../../../base/base.dart';
-import '../../../../extentions/extention.dart';
 import '../../../chat/chat_coordinator.dart';
 import '../bloc/signin_bloc.dart';
 import 'pages/account_selection.dart';
@@ -27,17 +25,8 @@ class SignInScreenState extends StateBase<SignInScreen> {
   @override
   SigninBloc get bloc => BlocProvider.of(context);
 
-  late ThemeData _themeData;
-
-  TextTheme get textTheme => _themeData.textTheme;
-
-  late AppLocalizations trans;
-
   @override
   Widget build(BuildContext context) {
-    _themeData = context.theme;
-    trans = translate(context);
-
     return SigninScreenInherited(state: this, child: const AccountSelection());
   }
 }

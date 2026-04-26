@@ -2,7 +2,7 @@ import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 
 import '../../../generated/assets.dart';
-import '../../extentions/extention.dart';
+import '../../../l10n/localization_ext.dart';
 import '../auth/authentication_coordinator.dart';
 
 class NotFoundPage extends StatefulWidget {
@@ -15,7 +15,6 @@ class NotFoundPage extends StatefulWidget {
 class _NotFoundPageState extends State<NotFoundPage> {
   @override
   Widget build(BuildContext context) {
-    final trans = translate(context);
     return Scaffold(
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -23,7 +22,7 @@ class _NotFoundPageState extends State<NotFoundPage> {
         children: [
           Center(
             child: EmptyData(
-              message: trans.pageNotFound,
+              message: l10n.pageNotFound,
               icon: Assets.image.emptySearchState,
               iconWidth: 220,
               iconHeight: 220,
@@ -31,10 +30,10 @@ class _NotFoundPageState extends State<NotFoundPage> {
           ),
           myNavigatorObserver.history.length <= 2
               ? ThemeButton.text(
-                  title: trans.backToHomepage,
+                  title: l10n.backToHomepage,
                   onPressed: _backToWelcomePage,
                 )
-              : ThemeButton.text(title: trans.back, onPressed: _back),
+              : ThemeButton.text(title: l10n.back, onPressed: _back),
         ],
       ),
     );

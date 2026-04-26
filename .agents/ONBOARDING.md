@@ -106,7 +106,7 @@ You can also call a skill explicitly:
 - Theming: `context.themeColor.*` for colors, Material 3 typography
   slots plus the `AppTextTheme` extras (`titleTiny`, `inputTitle`, …).
 - Localization: edit `localizations.csv`, run `make lang`. Use
-  `trans.<key>` or `context.l10n.<key>`.
+  `l10n.<key>` or `context.l10n.<key>`.
 - Codegen: `make gen_all` after touching `@freezed`, `@RestApi`,
   `@Injectable`, `@HiveType`, `_StateData`, etc.
 

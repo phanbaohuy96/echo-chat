@@ -35,7 +35,7 @@ metadata:
 import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 
-import '../../../../l10n/generated/app_localizations.dart';
+import '../../../../l10n/localization_ext.dart';
 import '../../../base/base.dart';
 import '../bloc/<feature>_bloc.dart';
 
@@ -59,17 +59,15 @@ class _FeatureScreenState extends StateBase<FeatureScreen> {
 
   late ThemeData _themeData;
   TextTheme get textTheme => _themeData.textTheme;
-  late AppLocalizations trans;
 
   @override
   Widget build(BuildContext context) {
     _themeData = context.theme;
-    trans = translate(context);
 
     return BlocListener<FeatureBloc, FeatureState>(
       listener: _blocListener,
       child: ScreenForm(
-        title: trans.featureTitle,
+        title: l10n.featureTitle,
         child: SmartRefresher(
           controller: _refreshController,
           onRefresh: onRefresh,

@@ -6,7 +6,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/intl.dart' as intl;
 
 import 'app_localizations_en.dart';
-import 'app_localizations_th.dart';
+import 'app_localizations_vi.dart';
 
 // ignore_for_file: type=lint
 
@@ -95,7 +95,7 @@ abstract class AppLocalizations {
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('en'),
-    Locale('th'),
+    Locale('vi'),
   ];
 
   /// No description provided for @inform.
@@ -193,6 +193,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This role is not supported yet.'**
   String get thisRoleIsNotSupportedYet;
+
+  /// No description provided for @appName.
+  ///
+  /// In en, this message translates to:
+  /// **'EchoChat'**
+  String get appName;
+
+  /// No description provided for @name.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get name;
+
+  /// No description provided for @username.
+  ///
+  /// In en, this message translates to:
+  /// **'Username'**
+  String get username;
+
+  /// No description provided for @password.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get password;
+
+  /// No description provided for @createAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Create an account'**
+  String get createAccount;
+
+  /// No description provided for @createEchoChatAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Create EchoChat account'**
+  String get createEchoChatAccount;
+
+  /// No description provided for @signUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign up'**
+  String get signUp;
+
+  /// No description provided for @alreadyHaveAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'I already have an account'**
+  String get alreadyHaveAccount;
+
+  /// No description provided for @usernamePasswordRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Username and password are required.'**
+  String get usernamePasswordRequired;
+
+  /// No description provided for @nameUsernamePasswordRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Name, username, and password are required.'**
+  String get nameUsernamePasswordRequired;
+
+  /// No description provided for @signUpFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign up failed.'**
+  String get signUpFailed;
+
+  /// No description provided for @createAnotherAccountToStartConversation.
+  ///
+  /// In en, this message translates to:
+  /// **'Create another account to start a conversation.'**
+  String get createAnotherAccountToStartConversation;
+
+  /// No description provided for @selectUserToStartChatting.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a user to start chatting.'**
+  String get selectUserToStartChatting;
+
+  /// No description provided for @startConversationWith.
+  ///
+  /// In en, this message translates to:
+  /// **'Start your conversation with'**
+  String get startConversationWith;
+
+  /// No description provided for @message.
+  ///
+  /// In en, this message translates to:
+  /// **'Message'**
+  String get message;
+
+  /// No description provided for @user.
+  ///
+  /// In en, this message translates to:
+  /// **'User'**
+  String get user;
+
+  /// No description provided for @refresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get refresh;
+
+  /// No description provided for @send.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get send;
 }
 
 class _AppLocalizationsDelegate
@@ -206,7 +314,7 @@ class _AppLocalizationsDelegate
 
   @override
   bool isSupported(Locale locale) =>
-      <String>['en', 'th'].contains(locale.languageCode);
+      <String>['en', 'vi'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
@@ -217,8 +325,8 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
   switch (locale.languageCode) {
     case 'en':
       return AppLocalizationsEn();
-    case 'th':
-      return AppLocalizationsTh();
+    case 'vi':
+      return AppLocalizationsVi();
   }
 
   throw FlutterError(

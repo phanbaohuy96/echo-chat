@@ -8,9 +8,10 @@ import '../../../../../domain/entities/auth/response.dart';
 import '../../../../../generated/assets.dart';
 import '../../../../../l10n/localization_ext.dart';
 import '../../../../base/base.dart';
-import '../../../../extentions/extention.dart';
 import '../../../chat/chat_coordinator.dart';
 import '../bloc/signup_bloc.dart';
+
+part 'signup.action.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -25,9 +26,6 @@ class _SignUpScreenState extends StateBase<SignUpScreen> {
   @override
   SignupBloc get bloc => BlocProvider.of(context);
 
-  @override
-  bool get willHandleError => false;
-
   final _nameController = TextEditingController();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -35,8 +33,6 @@ class _SignUpScreenState extends StateBase<SignUpScreen> {
   late ThemeData _themeData;
 
   TextTheme get textTheme => _themeData.textTheme;
-
-  late AppLocalizations trans;
 
   @override
   void dispose() {
@@ -49,29 +45,22 @@ class _SignUpScreenState extends StateBase<SignUpScreen> {
   @override
   Widget build(BuildContext context) {
     _themeData = context.theme;
-    trans = translate(context);
-    return BlocConsumer<SignupBloc, SignupState>(
-      listener: (_, __) => hideLoading(),
+    return BlocBuilder<SignupBloc, SignupState>(
       builder: (context, state) {
-        return GestureDetector(
-          onTap: () => FocusScope.of(context).unfocus(),
-          child: Scaffold(
-            body: SafeArea(
-              child: Center(
-                child: SingleChildScrollView(
-                  physics: const ClampingScrollPhysics(),
-                  child: _buildBody(),
-                ),
-              ),
+        return ScreenForm(
+          resizeToAvoidBottomInset: true,
+          bottomNavigationBar: Padding(
+            padding: EdgeInsets.only(bottom: max(paddingBottom, 16)),
+            child: Text(
+              l10n.poweredByVNS,
+              style: textTheme.labelMedium,
+              textAlign: TextAlign.center,
             ),
-            resizeToAvoidBottomInset: true,
-            bottomNavigationBar: Padding(
-              padding: EdgeInsets.only(bottom: max(paddingBottom, 16)),
-              child: Text(
-                trans.poweredByVNS,
-                style: textTheme.labelMedium,
-                textAlign: TextAlign.center,
-              ),
+          ),
+          child: Center(
+            child: SingleChildScrollView(
+              physics: const ClampingScrollPhysics(),
+              child: _buildBody(),
             ),
           ),
         );
@@ -87,76 +76,41 @@ class _SignUpScreenState extends StateBase<SignUpScreen> {
         children: [
           Image.asset(Assets.image.logo, height: 100, fit: BoxFit.fitHeight),
           const SizedBox(height: 20),
-          Text(
-            'Create EchoChat account'.hardcode,
-            style: textTheme.titleMedium,
-          ),
+          Text(l10n.createEchoChatAccount, style: textTheme.titleMedium),
           const SizedBox(height: 30),
           TextField(
             controller: _nameController,
             textInputAction: TextInputAction.next,
-            decoration: const InputDecoration(labelText: 'Name'),
+            decoration: InputDecoration(labelText: l10n.name),
           ),
           const SizedBox(height: 16),
           TextField(
             controller: _usernameController,
             textInputAction: TextInputAction.next,
-            decoration: const InputDecoration(labelText: 'Username'),
+            decoration: InputDecoration(labelText: l10n.username),
           ),
           const SizedBox(height: 16),
           TextField(
             controller: _passwordController,
             obscureText: true,
-            decoration: const InputDecoration(labelText: 'Password'),
+            decoration: InputDecoration(labelText: l10n.password),
             onSubmitted: (_) => _handleSignup(),
           ),
           const SizedBox(height: 30),
           SizedBox(
             width: double.infinity,
             child: ThemeButton.primary(
-              title: 'Sign up',
+              title: l10n.signUp,
               onPressed: _handleSignup,
             ),
           ),
           const SizedBox(height: 12),
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('I already have an account'),
+            child: Text(l10n.alreadyHaveAccount),
           ),
         ],
       ),
     );
-  }
-
-  Future<void> _handleSignup() async {
-    final name = _nameController.text.trim();
-    final username = _usernameController.text.trim();
-    final password = _passwordController.text;
-    if (name.isEmpty || username.isEmpty || password.isEmpty) {
-      showSnackBar(
-        context: context,
-        message: 'Name, username, and password are required.',
-      );
-      return;
-    }
-
-    showLoading();
-    final completer = Completer<AuthResponse>();
-    bloc.add(
-      SignupSubmittedEvent(
-        name: name,
-        username: username,
-        password: password,
-        completer: completer,
-      ),
-    );
-    final result = await completer.future;
-    if (result is AuthSuccessResponse) {
-      await context.openChat(
-        pushBehavior: PushNamedAndRemoveUntilBehavior.removeAll(),
-      );
-      return;
-    }
-    showSnackBar(context: context, message: 'Sign up failed.');
   }
 }

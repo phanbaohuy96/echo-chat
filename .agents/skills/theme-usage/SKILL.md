@@ -98,7 +98,7 @@ Use `ScreenForm` (`core/lib/presentation/common_widget/forms/screen_form.dart`) 
 
 ```dart
 ScreenForm(
-  title: trans.featureTitle,
+  title: l10n.featureTitle,
   child: ...,
 );
 ```
@@ -113,7 +113,7 @@ Lean on `ThemeButton` defaults rather than constructing `ButtonStyle` from scrat
 ElevatedButton(
   style: ThemeButton.primary(context),
   onPressed: _handleSubmit,
-  child: Text(trans.submit),
+  child: Text(l10n.submit),
 );
 ```
 

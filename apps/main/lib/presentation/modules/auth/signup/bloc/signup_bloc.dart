@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:core/core.dart';
+import 'package:dio/dio.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';
 
@@ -25,6 +26,7 @@ class SignupBloc extends AppBlocBase<SignupEvent, SignupState> {
     SignupSubmittedEvent event,
     Emitter<SignupState> emit,
   ) async {
+    showLoading();
     try {
       final result = await _authUsecase.signup(
         name: event.name,
@@ -33,8 +35,15 @@ class SignupBloc extends AppBlocBase<SignupEvent, SignupState> {
       );
       emit(state.copyWith<SignupSuccess>());
       event.completer.complete(result);
-    } catch (_) {
-      event.completer.complete(AuthResponse(result: LoginResultType.failed));
+    } on DioException catch (error) {
+      if (error.response?.statusCode == 409) {
+        event.completer.complete(AuthResponse(result: LoginResultType.failed));
+        return;
+      }
+      event.completer.completeError(error, error.stackTrace);
+      rethrow;
+    } finally {
+      hideLoading();
     }
   }
 }

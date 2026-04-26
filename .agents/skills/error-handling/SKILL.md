@@ -126,7 +126,7 @@ class _FeatureScreenState extends StateBase<FeatureScreen> {
   @override
   String getErrorMsg(ErrorData error) {
     if (error.type == ErrorType.badResponse && error.statusCode == 422) {
-      return trans.featureValidationError;
+      return l10n.featureValidationError;
     }
     return super.getErrorMsg(error);
   }
@@ -134,7 +134,7 @@ class _FeatureScreenState extends StateBase<FeatureScreen> {
   @override
   void onClientError(String? message, ErrorData error) {
     // 4xx → inline banner instead of the default dialog.
-    _bannerController.show(message ?? trans.somethingWrong);
+    _bannerController.show(message ?? l10n.somethingWrong);
     onCloseErrorDialog();   // clear errorTypeShowing so dedupe doesn't lock us out
   }
 }

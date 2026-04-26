@@ -33,7 +33,7 @@ metadata:
 - [ ] `bloc` getter overridden to `BlocProvider.of(context)`.
 - [ ] `static String routeName` declared, leading slash, lowercase.
 - [ ] Wraps in `ScreenForm` / `MainPageForm` rather than raw `Scaffold + AppBar` unless there's a reason.
-- [ ] Translates via `trans = translate(context)` or `context.l10n`; no hardcoded user-facing strings.
+- [ ] Translates via `l10n` or `context.l10n`; no hardcoded user-facing strings or cached localization state.
 - [ ] Action file (`<feature>.action.dart`) is a `part of` the screen and holds `_blocListener`, `onRefresh`, etc.
 
 ### Routing

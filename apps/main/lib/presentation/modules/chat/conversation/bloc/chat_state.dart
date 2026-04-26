@@ -11,7 +11,6 @@ sealed class _StateData with _$StateData {
     @Default(false) bool isLoadingPeers,
     @Default(false) bool isLoadingMessages,
     @Default(false) bool isSending,
-    String? errorMessage,
   }) = __StateData;
 
   factory _StateData.initial() => const _StateData();
@@ -38,7 +37,6 @@ abstract class ChatState {
 
   bool get isSending => data.isSending;
 
-  String? get errorMessage => data.errorMessage;
 }
 
 class ChatInitial extends ChatState {
