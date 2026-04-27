@@ -288,6 +288,55 @@ class ChatMessageDao extends DAO {
     return rows.map(_fromRow).toList();
   }
 
+  /// Returns the total number of cached local chat messages.
+  Future<int> countMessages() {
+    return count();
+  }
+
+  /// Returns the number of locally queued messages waiting to be sent.
+  Future<int> countPendingMessages() {
+    return count(
+      where: '$status = ?',
+      whereArgs: [ChatMessageStatus.pending.name],
+    );
+  }
+
+  /// Returns the number of locally queued messages that failed to send.
+  Future<int> countFailedMessages() {
+    return count(
+      where: '$status = ?',
+      whereArgs: [ChatMessageStatus.failed.name],
+    );
+  }
+
+  /// Returns the newest cached message timestamp across all conversations.
+  Future<DateTime?> getGlobalNewestCreatedAt() {
+    return _getGlobalCreatedAt('MAX');
+  }
+
+  /// Returns the oldest cached message timestamp across all conversations.
+  Future<DateTime?> getGlobalOldestCreatedAt() {
+    return _getGlobalCreatedAt('MIN');
+  }
+
+  /// Deletes every cached local chat message row.
+  Future<void> clearAll() {
+    return clearTable();
+  }
+
+  Future<DateTime?> _getGlobalCreatedAt(String functionName) async {
+    final rows = await execute(
+      () => db.database.rawQuery(
+        'SELECT $functionName($createdAt) AS $createdAt FROM $tableName',
+      ),
+    );
+    final value = rows.first[createdAt] as int?;
+    if (value == null) {
+      return null;
+    }
+    return DateTime.fromMillisecondsSinceEpoch(value);
+  }
+
   Future<void> _upsertRemoteMessage(
     ChatMessageDto remoteMessage, {
     required String currentUserId,

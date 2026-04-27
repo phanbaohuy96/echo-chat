@@ -2,6 +2,7 @@ import 'package:data_source/data_source.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../../domain/entities/chat/chat_conversation_sync.dart';
+import '../../../domain/entities/chat/chat_local_storage_summary.dart';
 import '../../../domain/entities/chat/local_chat_message.dart';
 import '../../data_source/local/sqlite/chat_conversation_sync_dao.dart';
 import '../../data_source/local/sqlite/chat_message_dao.dart';
@@ -133,5 +134,32 @@ class ChatLocalRepository {
 
   Future<List<LocalChatMessage>> getOutbox({String? peerUserId}) {
     return _messageDao.getOutbox(peerUserId: peerUserId);
+  }
+
+  /// Returns aggregate counts and message date bounds for cached chat data.
+  Future<ChatLocalStorageSummary> getStorageSummary() async {
+    final results = await Future.wait<Object?>([
+      _peerDao.countPeers(),
+      _messageDao.countMessages(),
+      _messageDao.countPendingMessages(),
+      _messageDao.countFailedMessages(),
+      _messageDao.getGlobalOldestCreatedAt(),
+      _messageDao.getGlobalNewestCreatedAt(),
+    ]);
+    return ChatLocalStorageSummary(
+      peerCount: results[0] as int,
+      messageCount: results[1] as int,
+      pendingMessageCount: results[2] as int,
+      failedMessageCount: results[3] as int,
+      oldestMessageCreatedAt: results[4] as DateTime?,
+      newestMessageCreatedAt: results[5] as DateTime?,
+    );
+  }
+
+  /// Deletes cached chat sync metadata, messages, and peers from local storage.
+  Future<void> clearAllCachedData() async {
+    await _syncDao.clearAll();
+    await _messageDao.clearAll();
+    await _peerDao.clearAll();
   }
 }

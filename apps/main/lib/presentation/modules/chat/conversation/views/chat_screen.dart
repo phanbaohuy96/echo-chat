@@ -8,6 +8,7 @@ import 'package:iconsax/iconsax.dart';
 import '../../../../../domain/entities/chat/local_chat_message.dart';
 import '../../../../../l10n/localization_ext.dart';
 import '../../../../base/base.dart';
+import '../../../settings/settings_coordinator.dart';
 import '../bloc/chat_bloc.dart';
 
 part 'chat.action.dart';
@@ -264,6 +265,12 @@ class _ChatScreenState extends StateBase<ChatScreen> {
                     ],
                   ),
                 ),
+                const SizedBox(width: 8),
+                IconButton.filledTonal(
+                  tooltip: l10n.settings,
+                  onPressed: _openSettings,
+                  icon: const Icon(Iconsax.setting_2),
+                ),
               ],
             ),
             const SizedBox(height: 18),
@@ -337,6 +344,12 @@ class _ChatScreenState extends StateBase<ChatScreen> {
                       ),
                     ],
                   ),
+                ),
+                const SizedBox(width: 8),
+                IconButton.filledTonal(
+                  tooltip: l10n.settings,
+                  onPressed: _openSettings,
+                  icon: const Icon(Iconsax.setting_2),
                 ),
                 const SizedBox(width: 8),
                 IconButton.filledTonal(
@@ -491,6 +504,12 @@ class _ChatScreenState extends StateBase<ChatScreen> {
               ),
             ),
             const SizedBox(width: 12),
+            IconButton.filledTonal(
+              tooltip: l10n.settings,
+              onPressed: _openSettings,
+              icon: const Icon(Iconsax.setting_2),
+            ),
+            const SizedBox(width: 8),
             IconButton.filledTonal(
               tooltip: l10n.refresh,
               onPressed: refreshing ? null : _refreshConversation,

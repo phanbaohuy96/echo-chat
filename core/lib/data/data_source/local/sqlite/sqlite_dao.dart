@@ -72,6 +72,25 @@ abstract class DAO {
     return db.execute<T>(executable, create: create);
   }
 
+  /// Returns the number of rows in this table, optionally filtered by [where].
+  Future<int> count({String? where, List<Object?>? whereArgs}) async {
+    final rows = await execute(
+      () => db.database.rawQuery(
+        [
+          'SELECT COUNT(*) AS count FROM $tableName',
+          if (where != null) 'WHERE $where',
+        ].join(' '),
+        whereArgs,
+      ),
+    );
+    return (rows.first['count'] as int?) ?? 0;
+  }
+
+  /// Deletes all rows from this table.
+  Future<void> clearTable() async {
+    await execute(() => db.delete(tableName));
+  }
+
   List<DataColumn> get columns;
 
   List<String> get columnsWhere => [...columns.map((e) => e.name)];

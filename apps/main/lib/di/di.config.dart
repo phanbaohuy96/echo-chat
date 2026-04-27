@@ -33,6 +33,10 @@ import '../domain/usecases/chat/chat_usecase.dart' as _i834;
 import '../presentation/modules/auth/signin/bloc/signin_bloc.dart' as _i893;
 import '../presentation/modules/auth/signup/bloc/signup_bloc.dart' as _i246;
 import '../presentation/modules/chat/conversation/bloc/chat_bloc.dart' as _i730;
+import '../presentation/modules/settings/settings_home/bloc/settings_bloc.dart'
+    as _i867;
+import '../presentation/modules/settings/storage_management/bloc/storage_management_bloc.dart'
+    as _i693;
 import '../presentation/route/route.dart' as _i722;
 import '../presentation/theme/theme_dialog.dart' as _i83;
 
@@ -96,7 +100,16 @@ Future<_i174.GetIt> $initGetIt(
       gh<_i366.ChatLocalRepository>(),
     ),
   );
+  gh.factory<_i867.SettingsBloc>(
+    () => _i867.SettingsBloc(
+      gh<_i655.LocalDataManager>(),
+      gh<_i834.ChatUsecase>(),
+    ),
+  );
   gh.factory<_i730.ChatBloc>(() => _i730.ChatBloc(gh<_i834.ChatUsecase>()));
+  gh.factory<_i693.StorageManagementBloc>(
+    () => _i693.StorageManagementBloc(gh<_i834.ChatUsecase>()),
+  );
   return getIt;
 }
 

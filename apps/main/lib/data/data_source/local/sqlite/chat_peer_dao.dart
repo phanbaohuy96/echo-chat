@@ -73,6 +73,16 @@ class ChatPeerDao extends DAO {
     return _peerFromRow(rows.first);
   }
 
+  /// Returns the number of cached chat peers.
+  Future<int> countPeers() {
+    return count();
+  }
+
+  /// Deletes every cached chat peer row.
+  Future<void> clearAll() {
+    return clearTable();
+  }
+
   UserModel _peerFromRow(Map<String, Object?> row) {
     return UserModel(
       id: row[userId] as String?,

@@ -284,6 +284,12 @@ abstract class AppLocalizations {
   /// **'Message'**
   String get message;
 
+  /// No description provided for @messages.
+  ///
+  /// In en, this message translates to:
+  /// **'Messages'**
+  String get messages;
+
   /// No description provided for @user.
   ///
   /// In en, this message translates to:
@@ -313,6 +319,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Failed. Tap to retry.'**
   String get failedTapToRetry;
+
+  /// No description provided for @settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settings;
+
+  /// No description provided for @account.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get account;
+
+  /// No description provided for @language.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get language;
+
+  /// No description provided for @storage.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage'**
+  String get storage;
+
+  /// No description provided for @logout.
+  ///
+  /// In en, this message translates to:
+  /// **'Logout'**
+  String get logout;
+
+  /// No description provided for @version.
+  ///
+  /// In en, this message translates to:
+  /// **'Version'**
+  String get version;
+
+  /// No description provided for @english.
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get english;
+
+  /// No description provided for @vietnamese.
+  ///
+  /// In en, this message translates to:
+  /// **'Vietnamese'**
+  String get vietnamese;
+
+  /// No description provided for @cachedUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'Cached users'**
+  String get cachedUsers;
+
+  /// No description provided for @cachedMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'Cached messages'**
+  String get cachedMessages;
+
+  /// No description provided for @pendingMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending messages'**
+  String get pendingMessages;
+
+  /// No description provided for @failedMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed messages'**
+  String get failedMessages;
+
+  /// No description provided for @clearLocalStorage.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear local storage'**
+  String get clearLocalStorage;
+
+  /// No description provided for @clearLocalStorageMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This clears cached chat data on this device. Your account and language settings stay unchanged.'**
+  String get clearLocalStorageMessage;
+
+  /// No description provided for @localStorageCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'Local storage cleared.'**
+  String get localStorageCleared;
+
+  /// No description provided for @logoutConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Log out of this account and clear local chat data on this device?'**
+  String get logoutConfirmation;
 }
 
 class _AppLocalizationsDelegate

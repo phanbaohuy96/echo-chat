@@ -7,6 +7,7 @@ import 'package:injectable/injectable.dart';
 
 import '../modules/auth/authentication_route.dart';
 import '../modules/chat/chat_route.dart';
+import '../modules/settings/settings_route.dart';
 
 @injectable
 class RouteGenerator {
@@ -16,6 +17,7 @@ class RouteGenerator {
     ...CoreRoute().routers(),
     ...AuthenticationRoute().routers(),
     ...ChatRoute().routers(),
+    ...SettingsRoute().routers(),
   ];
 
   late final List<CustomRouter> _sortedRouters = [...routers]

@@ -107,6 +107,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get message => 'Tin nhắn';
 
   @override
+  String get messages => 'Tin nhắn';
+
+  @override
   String get user => 'Người dùng';
 
   @override
@@ -120,4 +123,54 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get failedTapToRetry => 'Gửi thất bại. Nhấn để thử lại.';
+
+  @override
+  String get settings => 'Cài đặt';
+
+  @override
+  String get account => 'Tài khoản';
+
+  @override
+  String get language => 'Ngôn ngữ';
+
+  @override
+  String get storage => 'Lưu trữ';
+
+  @override
+  String get logout => 'Đăng xuất';
+
+  @override
+  String get version => 'Phiên bản';
+
+  @override
+  String get english => 'Tiếng Anh';
+
+  @override
+  String get vietnamese => 'Tiếng Việt';
+
+  @override
+  String get cachedUsers => 'Người dùng đã lưu';
+
+  @override
+  String get cachedMessages => 'Tin nhắn đã lưu';
+
+  @override
+  String get pendingMessages => 'Tin nhắn đang chờ';
+
+  @override
+  String get failedMessages => 'Tin nhắn lỗi';
+
+  @override
+  String get clearLocalStorage => 'Xóa dữ liệu cục bộ';
+
+  @override
+  String get clearLocalStorageMessage =>
+      'Thao tác này xóa dữ liệu trò chuyện đã lưu trên thiết bị này. Tài khoản và cài đặt ngôn ngữ vẫn giữ nguyên.';
+
+  @override
+  String get localStorageCleared => 'Đã xóa dữ liệu cục bộ.';
+
+  @override
+  String get logoutConfirmation =>
+      'Đăng xuất khỏi tài khoản này và xóa dữ liệu trò chuyện cục bộ trên thiết bị này?';
 }

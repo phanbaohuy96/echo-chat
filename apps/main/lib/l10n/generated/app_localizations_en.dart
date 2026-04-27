@@ -105,6 +105,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get message => 'Message';
 
   @override
+  String get messages => 'Messages';
+
+  @override
   String get user => 'User';
 
   @override
@@ -118,4 +121,54 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get failedTapToRetry => 'Failed. Tap to retry.';
+
+  @override
+  String get settings => 'Settings';
+
+  @override
+  String get account => 'Account';
+
+  @override
+  String get language => 'Language';
+
+  @override
+  String get storage => 'Storage';
+
+  @override
+  String get logout => 'Logout';
+
+  @override
+  String get version => 'Version';
+
+  @override
+  String get english => 'English';
+
+  @override
+  String get vietnamese => 'Vietnamese';
+
+  @override
+  String get cachedUsers => 'Cached users';
+
+  @override
+  String get cachedMessages => 'Cached messages';
+
+  @override
+  String get pendingMessages => 'Pending messages';
+
+  @override
+  String get failedMessages => 'Failed messages';
+
+  @override
+  String get clearLocalStorage => 'Clear local storage';
+
+  @override
+  String get clearLocalStorageMessage =>
+      'This clears cached chat data on this device. Your account and language settings stay unchanged.';
+
+  @override
+  String get localStorageCleared => 'Local storage cleared.';
+
+  @override
+  String get logoutConfirmation =>
+      'Log out of this account and clear local chat data on this device?';
 }

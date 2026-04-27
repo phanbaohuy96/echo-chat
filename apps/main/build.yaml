@@ -34,6 +34,8 @@ targets:
           - lib/presentation/modules/auth/signin/bloc/signin_bloc.dart
           - lib/presentation/modules/auth/signup/bloc/signup_bloc.dart
           - lib/presentation/modules/chat/conversation/bloc/chat_bloc.dart
+          - lib/presentation/modules/settings/settings_home/bloc/settings_bloc.dart
+          - lib/presentation/modules/settings/storage_management/bloc/storage_management_bloc.dart
           - lib/presentation/route/route.dart
           - lib/presentation/theme/theme_dialog.dart
       injectable_generator:injectable_config_builder:
@@ -54,5 +56,7 @@ targets:
           - lib/presentation/modules/auth/signin/bloc/signin_bloc.dart
           - lib/presentation/modules/auth/signup/bloc/signup_bloc.dart
           - lib/presentation/modules/chat/conversation/bloc/chat_bloc.dart
+          - lib/presentation/modules/settings/settings_home/bloc/settings_bloc.dart
+          - lib/presentation/modules/settings/storage_management/bloc/storage_management_bloc.dart
           - lib/presentation/route/route.dart
           - lib/presentation/theme/theme_dialog.dart
