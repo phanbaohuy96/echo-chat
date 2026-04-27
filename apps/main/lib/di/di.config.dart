@@ -29,7 +29,14 @@ import '../data/data_source/local/sqlite/chat_peer_dao.dart' as _i377;
 import '../data/data_source/local/sqlite/sqlite_database.impl.dart' as _i833;
 import '../data/repositories/chat/chat_local_repository.dart' as _i366;
 import '../domain/usecases/auth/auth_usecase.dart' as _i738;
-import '../domain/usecases/chat/chat_usecase.dart' as _i834;
+import '../domain/usecases/chat/chat_conversation_usecase.dart' as _i652;
+import '../domain/usecases/chat/chat_conversation_usecase.impl.dart' as _i931;
+import '../domain/usecases/chat/chat_outbox_usecase.dart' as _i504;
+import '../domain/usecases/chat/chat_outbox_usecase.impl.dart' as _i54;
+import '../domain/usecases/chat/chat_peers_usecase.dart' as _i655;
+import '../domain/usecases/chat/chat_peers_usecase.impl.dart' as _i765;
+import '../domain/usecases/chat/chat_storage_usecase.dart' as _i235;
+import '../domain/usecases/chat/chat_storage_usecase.impl.dart' as _i865;
 import '../presentation/modules/auth/signin/bloc/signin_bloc.dart' as _i893;
 import '../presentation/modules/auth/signup/bloc/signup_bloc.dart' as _i246;
 import '../presentation/modules/chat/conversation/bloc/chat_bloc.dart' as _i730;
@@ -93,22 +100,45 @@ Future<_i174.GetIt> $initGetIt(
       gh<_i1066.ChatConversationSyncDao>(),
     ),
   );
-  gh.factory<_i834.ChatUsecase>(
-    () => _i834.ChatInteractorImpl(
+  gh.factory<_i235.ChatStorageUsecase>(
+    () => _i865.ChatStorageInteractorImpl(gh<_i366.ChatLocalRepository>()),
+  );
+  gh.factory<_i693.StorageManagementBloc>(
+    () => _i693.StorageManagementBloc(gh<_i235.ChatStorageUsecase>()),
+  );
+  gh.factory<_i652.ChatConversationUsecase>(
+    () => _i931.ChatConversationInteractorImpl(
       gh<_i655.LocalDataManager>(),
       gh<_i494.AppApiService>(),
       gh<_i366.ChatLocalRepository>(),
     ),
   );
+  gh.factory<_i504.ChatOutboxUsecase>(
+    () => _i54.ChatOutboxInteractorImpl(
+      gh<_i655.LocalDataManager>(),
+      gh<_i494.AppApiService>(),
+      gh<_i366.ChatLocalRepository>(),
+    ),
+  );
+  gh.factory<_i655.ChatPeersUsecase>(
+    () => _i765.ChatPeersInteractorImpl(
+      gh<_i655.LocalDataManager>(),
+      gh<_i494.AppApiService>(),
+      gh<_i366.ChatLocalRepository>(),
+    ),
+  );
+  gh.factory<_i730.ChatBloc>(
+    () => _i730.ChatBloc(
+      gh<_i655.ChatPeersUsecase>(),
+      gh<_i652.ChatConversationUsecase>(),
+      gh<_i504.ChatOutboxUsecase>(),
+    ),
+  );
   gh.factory<_i867.SettingsBloc>(
     () => _i867.SettingsBloc(
       gh<_i655.LocalDataManager>(),
-      gh<_i834.ChatUsecase>(),
+      gh<_i235.ChatStorageUsecase>(),
     ),
-  );
-  gh.factory<_i730.ChatBloc>(() => _i730.ChatBloc(gh<_i834.ChatUsecase>()));
-  gh.factory<_i693.StorageManagementBloc>(
-    () => _i693.StorageManagementBloc(gh<_i834.ChatUsecase>()),
   );
   return getIt;
 }

@@ -143,12 +143,12 @@ Signin/signup flow:
 
 Chat flow:
 
-1. Chat screen asks `ChatUsecase` for cached peers and cached conversation messages from SQLite.
+1. Chat screen asks `ChatPeersUsecase` and `ChatConversationUsecase` for cached peers and cached conversation messages from SQLite.
 2. Chat BLoC renders cached data immediately, then syncs peers and the selected conversation from the backend.
 3. Synced peers/messages are upserted into local `chatPeer` and `chatMessage` tables before the UI is refreshed from the local cache.
 4. User sends a message from the composer.
-5. Chat BLoC queues the outgoing message locally with `pending` status and a stable `client_message_id`.
-6. `ChatUsecase` posts the queued message to the backend; success marks it `sent` with the remote id/timestamp, while failure marks it `failed` with an error message.
+5. Chat BLoC uses `ChatOutboxUsecase` to queue the outgoing message locally with `pending` status and a stable `client_message_id`.
+6. `ChatOutboxUsecase` posts the queued message to the backend; success marks it `sent` with the remote id/timestamp, while failure marks it `failed` with an error message.
 7. Failed messages can be retried with the original `client_message_id`, relying on backend idempotency to avoid duplicate remote messages.
 8. Manual refresh drains pending outbox rows, calls the backend with `after_created_at`, batch upserts newer messages, updates `chatConversationSync`, and re-reads SQLite.
 9. Scrolling near the top calls the backend with `before_created_at` and a page limit, batch upserts older history, and re-reads SQLite without duplicates.

@@ -4,7 +4,9 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../../../../domain/entities/chat/local_chat_message.dart';
-import '../../../../../domain/usecases/chat/chat_usecase.dart';
+import '../../../../../domain/usecases/chat/chat_conversation_usecase.dart';
+import '../../../../../domain/usecases/chat/chat_outbox_usecase.dart';
+import '../../../../../domain/usecases/chat/chat_peers_usecase.dart';
 import '../../../../base/base.dart';
 
 part 'chat_bloc.freezed.dart';
@@ -13,7 +15,11 @@ part 'chat_state.dart';
 
 @Injectable()
 class ChatBloc extends AppBlocBase<ChatEvent, ChatState> {
-  ChatBloc(this._chatUsecase) : super(ChatInitial(data: _StateData.initial())) {
+  ChatBloc(
+    this._chatPeersUsecase,
+    this._chatConversationUsecase,
+    this._chatOutboxUsecase,
+  ) : super(ChatInitial(data: _StateData.initial())) {
     on<ChatStartedEvent>(_onChatStartedEvent);
     on<ChatPeerSelectedEvent>(_onChatPeerSelectedEvent);
     on<ChatRefreshRequestedEvent>(_onChatRefreshRequestedEvent);
@@ -22,7 +28,9 @@ class ChatBloc extends AppBlocBase<ChatEvent, ChatState> {
     on<ChatMessageSubmittedEvent>(_onChatMessageSubmittedEvent);
   }
 
-  final ChatUsecase _chatUsecase;
+  final ChatPeersUsecase _chatPeersUsecase;
+  final ChatConversationUsecase _chatConversationUsecase;
+  final ChatOutboxUsecase _chatOutboxUsecase;
   final _uuid = const Uuid();
   final _retryingMessageIds = <String>{};
 
@@ -33,12 +41,12 @@ class ChatBloc extends AppBlocBase<ChatEvent, ChatState> {
     emit(state.copyWith(data: state.data.copyWith(isLoadingPeers: true)));
 
     try {
-      final cachedPeers = await _chatUsecase.getCachedPeers();
+      final cachedPeers = await _chatPeersUsecase.getCachedPeers();
       final cachedSelectedPeer = state.selectedPeer ?? cachedPeers.firstOrNull;
       final cachedPeerUserId = cachedSelectedPeer?.id;
       final cachedHasMoreOlder =
           cachedPeerUserId == null ||
-          await _chatUsecase.hasMoreOlderMessages(cachedPeerUserId);
+          await _chatConversationUsecase.hasMoreOlderMessages(cachedPeerUserId);
       emit(
         state.copyWith(
           data: state.data.copyWith(
@@ -77,7 +85,7 @@ class ChatBloc extends AppBlocBase<ChatEvent, ChatState> {
           messages: await _messagesFor(event.peer),
           hasMoreOlder:
               peerUserId == null ||
-              await _chatUsecase.hasMoreOlderMessages(peerUserId),
+              await _chatConversationUsecase.hasMoreOlderMessages(peerUserId),
         ),
       ),
     );
@@ -110,7 +118,9 @@ class ChatBloc extends AppBlocBase<ChatEvent, ChatState> {
     }
     emit(state.copyWith(data: state.data.copyWith(isLoadingOlder: true)));
     try {
-      final result = await _chatUsecase.loadOlderMessages(peerUserId);
+      final result = await _chatConversationUsecase.loadOlderMessages(
+        peerUserId,
+      );
       emit(
         state.copyWith(
           data: state.data.copyWith(
@@ -140,7 +150,7 @@ class ChatBloc extends AppBlocBase<ChatEvent, ChatState> {
     emit(state.copyWith(data: state.data.copyWith(isSending: true)));
 
     try {
-      final pendingMessage = await _chatUsecase.enqueueMessage(
+      final pendingMessage = await _chatOutboxUsecase.enqueueMessage(
         recipientUserId: recipientUserId,
         clientMessageId: clientMessageId,
         message: message,
@@ -159,7 +169,9 @@ class ChatBloc extends AppBlocBase<ChatEvent, ChatState> {
           ),
         ),
       );
-      final messages = await _chatUsecase.sendQueuedMessage(clientMessageId);
+      final messages = await _chatOutboxUsecase.sendQueuedMessage(
+        clientMessageId,
+      );
       emit(
         state.copyWith(
           data: state.data.copyWith(messages: _mapMessages(messages)),
@@ -178,7 +190,9 @@ class ChatBloc extends AppBlocBase<ChatEvent, ChatState> {
       return;
     }
     try {
-      final messages = await _chatUsecase.retryMessage(event.clientMessageId);
+      final messages = await _chatOutboxUsecase.retryMessage(
+        event.clientMessageId,
+      );
       if (messages.isNotEmpty) {
         emit(
           state.copyWith(
@@ -207,9 +221,13 @@ class ChatBloc extends AppBlocBase<ChatEvent, ChatState> {
     );
 
     try {
-      await _chatUsecase.syncOutbox(peerUserId: peerUserId);
-      final messages = await _chatUsecase.refreshConversation(peerUserId);
-      final hasMoreOlder = await _chatUsecase.hasMoreOlderMessages(peerUserId);
+      await _chatOutboxUsecase.syncOutbox(peerUserId: peerUserId);
+      final messages = await _chatConversationUsecase.refreshConversation(
+        peerUserId,
+      );
+      final hasMoreOlder = await _chatConversationUsecase.hasMoreOlderMessages(
+        peerUserId,
+      );
       emit(
         state.copyWith(
           data: state.data.copyWith(
@@ -228,12 +246,12 @@ class ChatBloc extends AppBlocBase<ChatEvent, ChatState> {
   }
 
   Future<void> _syncPeers(Emitter<ChatState> emit) async {
-    final peers = await _chatUsecase.syncPeers();
+    final peers = await _chatPeersUsecase.syncPeers();
     final selectedPeer = state.selectedPeer ?? peers.firstOrNull;
     final selectedPeerUserId = selectedPeer?.id;
     final hasMoreOlder =
         selectedPeerUserId == null ||
-        await _chatUsecase.hasMoreOlderMessages(selectedPeerUserId);
+        await _chatConversationUsecase.hasMoreOlderMessages(selectedPeerUserId);
     emit(
       state.copyWith(
         data: state.data.copyWith(
@@ -251,7 +269,9 @@ class ChatBloc extends AppBlocBase<ChatEvent, ChatState> {
     if (peerUserId == null) {
       return [];
     }
-    return _mapMessages(await _chatUsecase.getCachedConversation(peerUserId));
+    return _mapMessages(
+      await _chatConversationUsecase.getCachedConversation(peerUserId),
+    );
   }
 
   List<ChatMessage> _mapMessages(List<LocalChatMessage> messages) {

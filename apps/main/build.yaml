@@ -30,7 +30,10 @@ targets:
           - lib/di/di.config.dart
           - lib/di/di.dart
           - lib/domain/usecases/auth/auth_usecase.dart
-          - lib/domain/usecases/chat/chat_usecase.dart
+          - lib/domain/usecases/chat/chat_conversation_usecase.impl.dart
+          - lib/domain/usecases/chat/chat_outbox_usecase.impl.dart
+          - lib/domain/usecases/chat/chat_peers_usecase.impl.dart
+          - lib/domain/usecases/chat/chat_storage_usecase.impl.dart
           - lib/presentation/modules/auth/signin/bloc/signin_bloc.dart
           - lib/presentation/modules/auth/signup/bloc/signup_bloc.dart
           - lib/presentation/modules/chat/conversation/bloc/chat_bloc.dart
@@ -52,7 +55,10 @@ targets:
           - lib/di/di.config.dart
           - lib/di/di.dart
           - lib/domain/usecases/auth/auth_usecase.dart
-          - lib/domain/usecases/chat/chat_usecase.dart
+          - lib/domain/usecases/chat/chat_conversation_usecase.impl.dart
+          - lib/domain/usecases/chat/chat_outbox_usecase.impl.dart
+          - lib/domain/usecases/chat/chat_peers_usecase.impl.dart
+          - lib/domain/usecases/chat/chat_storage_usecase.impl.dart
           - lib/presentation/modules/auth/signin/bloc/signin_bloc.dart
           - lib/presentation/modules/auth/signup/bloc/signup_bloc.dart
           - lib/presentation/modules/chat/conversation/bloc/chat_bloc.dart

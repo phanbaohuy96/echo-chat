@@ -34,7 +34,7 @@
 - [x] Add `AppApiService` wrapper methods.
 - [x] Refactor `AuthUsecase` to call backend signin/signup.
 - [x] Update token bootstrap through `/api/auth/me`.
-- [x] Add `ChatUsecase`.
+- [x] Add focused chat use cases.
 - [x] Regenerate Retrofit and Injectable files.
 
 ## Phase 5 — Flutter auth UI
@@ -63,7 +63,7 @@
 - [x] Add backend tests for peer listing, send, idempotent retry, conversation fetch, and invalid recipients.
 - [x] Replace chatbot DTOs with user-to-user chat DTOs in `modules/data_source`.
 - [x] Add `chatUsers` API contract and client API wrappers.
-- [x] Refactor `ChatUsecase` around peers, conversations, and user-to-user sends.
+- [x] Refactor chat use cases around peers, conversations, and user-to-user sends.
 - [x] Add chat domain message entity.
 - [x] Update `ChatBloc` state/events for peers, selected peer, refresh, send, and error state.
 - [x] Update chat UI with peer selector, refresh action, incoming/outgoing message rendering, and no-bot empty states.
@@ -78,7 +78,7 @@
 - [x] Add `ChatLocalRepository` to map SQLite rows to domain chat entities.
 - [x] Add `ChatMessageStatus` values: `pending`, `sent`, `failed`.
 - [x] Extend chat domain messages with status, error, and local/remote IDs.
-- [x] Refactor `ChatUsecase` to load cached peers/messages first and sync remote second.
+- [x] Refactor chat use cases to load cached peers/messages first and sync remote second.
 - [x] Queue outgoing messages locally before remote send.
 - [x] Update sent/failed status after backend sync.
 - [x] Add retry support using the same `client_message_id`.
