@@ -228,6 +228,16 @@ class ChatInteractorImpl extends ChatUsecase {
     }
   }
 
+  @override
+  Future<ChatLocalStorageSummary> getLocalStorageSummary() {
+    return _localRepository.getStorageSummary();
+  }
+
+  @override
+  Future<void> clearLocalStorage() {
+    return _localRepository.clearAllCachedData();
+  }
+
   List<UserModel> _withoutCurrentUser(List<UserModel> peers) {
     final currentUserId = _currentUserId;
     if (currentUserId == null) {

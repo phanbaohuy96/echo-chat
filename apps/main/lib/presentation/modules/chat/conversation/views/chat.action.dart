@@ -43,6 +43,13 @@ extension ChatAction on _ChatScreenState {
     bloc.add(ChatRefreshRequestedEvent());
   }
 
+  Future<void> _openSettings() async {
+    final storageCleared = await context.openSettings();
+    if (storageCleared == true) {
+      bloc.add(ChatStartedEvent());
+    }
+  }
+
   void _selectPeer(UserModel peer) {
     bloc.add(ChatPeerSelectedEvent(peer));
     _setShowMobileConversation(true);

@@ -4,6 +4,7 @@ import 'package:injectable/injectable.dart';
 
 import '../../../data/data_source/local/local_data_manager.dart';
 import '../../../data/repositories/chat/chat_local_repository.dart';
+import '../../entities/chat/chat_local_storage_summary.dart';
 import '../../entities/chat/local_chat_message.dart';
 
 part 'chat_usecase.impl.dart';
@@ -39,4 +40,10 @@ abstract class ChatUsecase {
   Future<void> syncQueuedMessage(String clientMessageId);
 
   Future<void> syncOutbox({String? peerUserId});
+
+  /// Returns counts and date bounds for chat data cached on this device.
+  Future<ChatLocalStorageSummary> getLocalStorageSummary();
+
+  /// Clears cached chat peers, messages, and sync metadata on this device.
+  Future<void> clearLocalStorage();
 }

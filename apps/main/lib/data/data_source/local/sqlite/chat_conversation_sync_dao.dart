@@ -122,6 +122,11 @@ class ChatConversationSyncDao extends DAO {
     );
   }
 
+  /// Deletes every cached conversation sync metadata row.
+  Future<void> clearAll() {
+    return clearTable();
+  }
+
   ChatConversationSync _fromRow(Map<String, Object?> row) {
     return ChatConversationSync(
       peerUserId: row[peerUserId] as String,

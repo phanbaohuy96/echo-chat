@@ -30,8 +30,25 @@ createAnotherAccountToStartConversation,Create another account to start a conver
 selectUserToStartChatting,Select a user to start chatting.,Chọn một người dùng để bắt đầu trò chuyện.
 startConversationWith,Start your conversation with,Bắt đầu trò chuyện với
 message,Message,Tin nhắn
+messages,Messages,Tin nhắn
 user,User,Người dùng
 refresh,Refresh,Làm mới
 send,Send,Gửi
 sending,Sending...,Đang gửi...
 failedTapToRetry,Failed. Tap to retry.,Gửi thất bại. Nhấn để thử lại.
+settings,Settings,Cài đặt
+account,Account,Tài khoản
+language,Language,Ngôn ngữ
+storage,Storage,Lưu trữ
+logout,Logout,Đăng xuất
+version,Version,Phiên bản
+english,English,Tiếng Anh
+vietnamese,Vietnamese,Tiếng Việt
+cachedUsers,Cached users,Người dùng đã lưu
+cachedMessages,Cached messages,Tin nhắn đã lưu
+pendingMessages,Pending messages,Tin nhắn đang chờ
+failedMessages,Failed messages,Tin nhắn lỗi
+clearLocalStorage,Clear local storage,Xóa dữ liệu cục bộ
+clearLocalStorageMessage,This clears cached chat data on this device. Your account and language settings stay unchanged.,Thao tác này xóa dữ liệu trò chuyện đã lưu trên thiết bị này. Tài khoản và cài đặt ngôn ngữ vẫn giữ nguyên.
+localStorageCleared,Local storage cleared.,Đã xóa dữ liệu cục bộ.
+logoutConfirmation,Log out of this account and clear local chat data on this device?,Đăng xuất khỏi tài khoản này và xóa dữ liệu trò chuyện cục bộ trên thiết bị này?
