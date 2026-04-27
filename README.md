@@ -130,7 +130,10 @@ Presentation
   ChatBloc   -> cache-first screen state and per-message status
 
 Domain
-  ChatUsecase -> cache reads, remote sync, outbox drain, send, retry
+  ChatPeersUsecase        -> cached peers and peer sync
+  ChatConversationUsecase -> cached conversations, refresh, older pages
+  ChatOutboxUsecase       -> queue, send, retry, outbox drain
+  ChatStorageUsecase      -> chat cache summary and clearing
 
 Data
   ChatLocalRepository      -> DAO orchestration
