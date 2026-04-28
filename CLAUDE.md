@@ -23,6 +23,16 @@ EchoChat is a demo chat monorepo created from the Flutter core template. The tem
 - `modules/data_source` contains shared client-side data models and DTOs.
 - `plugins/*` contains reusable Flutter packages from the template.
 
+## Spec-Driven Development rules
+
+- Use `specs/README.md` as the workflow source of truth and `specs/template.md` for new feature specs.
+- For non-trivial feature work, create or update a spec under `specs/features/` before implementation.
+- Do not implement a `Draft` spec unless the user explicitly approves proceeding; move approved work to `Approved` or `Implementing` as appropriate.
+- Keep specs short and implementation-facing: define behavior, scope, UX/API/data contracts, architecture mapping, acceptance criteria, and verification.
+- Implement against the spec boundaries and update the spec when product or technical decisions change during the work.
+- Check off acceptance criteria and verification steps as they pass; mark a spec `Verified` only after relevant automated checks and manual smoke testing are complete.
+- If the user says “do it” for SDD work, make the concrete safe repository changes instead of only describing the workflow.
+
 ## Flutter rules
 
 - Follow feature folders under `apps/main/lib/presentation/modules/<feature>`.
