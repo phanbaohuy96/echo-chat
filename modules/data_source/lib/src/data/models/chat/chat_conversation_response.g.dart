@@ -32,6 +32,9 @@ ChatConversationSyncMetadataDto _$ChatConversationSyncMetadataDtoFromJson(
   latestMessageCreatedAt: json['latest_message_created_at'] == null
       ? null
       : DateTime.parse(json['latest_message_created_at'] as String),
+  latestMessageUpdatedAt: json['latest_message_updated_at'] == null
+      ? null
+      : DateTime.parse(json['latest_message_updated_at'] as String),
   oldestMessageCreatedAt: json['oldest_message_created_at'] == null
       ? null
       : DateTime.parse(json['oldest_message_created_at'] as String),
@@ -42,6 +45,8 @@ Map<String, dynamic> _$ChatConversationSyncMetadataDtoToJson(
   ChatConversationSyncMetadataDto instance,
 ) => <String, dynamic>{
   'latest_message_created_at': instance.latestMessageCreatedAt
+      ?.toIso8601String(),
+  'latest_message_updated_at': instance.latestMessageUpdatedAt
       ?.toIso8601String(),
   'oldest_message_created_at': instance.oldestMessageCreatedAt
       ?.toIso8601String(),

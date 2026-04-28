@@ -124,6 +124,7 @@ void main() {
             ],
             syncMetadata: ChatConversationSyncMetadataDto(
               latestMessageCreatedAt: remoteCreatedAt,
+              latestMessageUpdatedAt: remoteCreatedAt,
               oldestMessageCreatedAt: remoteCreatedAt,
             ),
           ).toJson();
@@ -141,7 +142,7 @@ void main() {
         final messages = await usecase.refreshConversation('peer');
 
         expect(restApi.lastChatMessagesPeerUserId, 'peer');
-        expect(restApi.lastAfterCreatedAt, latest.toUtc().toIso8601String());
+        expect(restApi.lastAfterUpdatedAt, latest.toUtc().toIso8601String());
         expect(repository.lastCachedRemoteCurrentUserId, 'current-user');
         expect(messages.single.clientMessageId, 'remote-client');
       },
@@ -341,6 +342,95 @@ void main() {
       expect(repository.markPendingCount, 1);
       expect(repository.markSentCount, 1);
     });
+
+    test('deleteMessage removes pending local-only messages', () async {
+      final localDataManager = TestLocalDataManager(
+        userInfo: const UserModel(id: 'current-user'),
+      );
+      final repository = FakeChatLocalRepository()
+        ..messages['client-message'] = localMessage(
+          remoteId: null,
+          clientMessageId: 'client-message',
+          status: ChatMessageStatus.pending,
+        );
+      final usecase = ChatOutboxInteractorImpl(
+        localDataManager,
+        AppApiService(FakeRestApiRepository(), localDataManager),
+        repository,
+      );
+
+      final messages = await usecase.deleteMessage('client-message');
+
+      expect(repository.deleteLocalOnlyMessageCount, 1);
+      expect(repository.lastDeletedLocalOnlyClientMessageId, 'client-message');
+      expect(messages, isEmpty);
+    });
+
+    test('deleteMessage deletes remote messages and caches response', () async {
+      final deletedAt = DateTime.utc(2026, 1, 3);
+      final localDataManager = TestLocalDataManager(
+        userInfo: const UserModel(id: 'current-user'),
+      );
+      final restApi = FakeRestApiRepository()
+        ..deleteChatMessageResponse = DeleteMessageResponse(
+          message: messageDto(
+            id: 'remote-message',
+            clientMessageId: 'client-message',
+            message: '',
+            updatedAt: deletedAt,
+            deletedAt: deletedAt,
+            version: 2,
+          ),
+        ).toJson();
+      final repository = FakeChatLocalRepository()
+        ..messages['client-message'] = localMessage(
+          remoteId: 'remote-message',
+          clientMessageId: 'client-message',
+          status: ChatMessageStatus.sent,
+        );
+      final usecase = ChatOutboxInteractorImpl(
+        localDataManager,
+        AppApiService(restApi, localDataManager),
+        repository,
+      );
+
+      final messages = await usecase.deleteMessage('client-message');
+
+      expect(restApi.lastDeletedMessageId, 'remote-message');
+      expect(repository.lastCachedRemoteMessage?.deletedAt, deletedAt);
+      expect(messages.single.deletedAt, deletedAt);
+    });
+
+    test(
+      'deleteMessage keeps local message unchanged when remote delete fails',
+      () async {
+        final localDataManager = TestLocalDataManager(
+          userInfo: const UserModel(id: 'current-user'),
+        );
+        final restApi = FakeRestApiRepository()
+          ..deleteChatMessageError = StateError('offline');
+        final repository = FakeChatLocalRepository()
+          ..messages['client-message'] = localMessage(
+            remoteId: 'remote-message',
+            clientMessageId: 'client-message',
+            status: ChatMessageStatus.sent,
+          );
+        final usecase = ChatOutboxInteractorImpl(
+          localDataManager,
+          AppApiService(restApi, localDataManager),
+          repository,
+        );
+
+        await expectLater(
+          usecase.deleteMessage('client-message'),
+          throwsA(isA<StateError>()),
+        );
+
+        expect(repository.markFailedCount, 0);
+        expect(repository.messages['client-message']?.message, 'Hello');
+        expect(repository.messages['client-message']?.deletedAt, isNull);
+      },
+    );
 
     test('syncOutbox sends pending messages for the requested peer', () async {
       final localDataManager = TestLocalDataManager(

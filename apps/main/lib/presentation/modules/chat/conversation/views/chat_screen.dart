@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:core/core.dart';
@@ -588,6 +589,9 @@ class _ChatScreenState extends StateBase<ChatScreen> {
                 message: message,
                 maxWidth: bubbleMaxWidth,
                 groupedWithPrevious: groupedWithPrevious,
+                onDelete: message.isMine && !message.isDeleted
+                    ? () => _confirmDeleteMessage(message)
+                    : null,
               ),
             );
           },
@@ -945,11 +949,13 @@ class _MessageBubble extends StatelessWidget {
     required this.message,
     required this.maxWidth,
     required this.groupedWithPrevious,
+    required this.onDelete,
   });
 
   final ChatMessage message;
   final double maxWidth;
   final bool groupedWithPrevious;
+  final VoidCallback? onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -957,13 +963,16 @@ class _MessageBubble extends StatelessWidget {
     final textTheme = context.textTheme;
     final failed = message.status == ChatMessageStatus.failed;
     final pending = message.status == ChatMessageStatus.pending;
+    final deleted = message.isDeleted;
     final mineBackground = failed
         ? colors.error.withValues(alpha: 0.10)
+        : deleted
+        ? colors.secondary.withValues(alpha: 0.70)
         : colors.primary;
     final background = message.isMine
         ? mineBackground
-        : colors.secondary.withValues(alpha: 0.50);
-    final foreground = message.isMine && !failed
+        : colors.secondary.withValues(alpha: deleted ? 0.32 : 0.50);
+    final foreground = message.isMine && !failed && !deleted
         ? colors.onPrimary
         : colors.onSurface;
     final hasTail = !groupedWithPrevious;
@@ -980,8 +989,11 @@ class _MessageBubble extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            message.text,
-            style: textTheme.bodyMedium?.copyWith(color: foreground),
+            deleted ? context.l10n.messageDeleted : message.text,
+            style: textTheme.bodyMedium?.copyWith(
+              color: foreground.withValues(alpha: deleted ? 0.72 : 1),
+              fontStyle: deleted ? FontStyle.italic : null,
+            ),
           ),
           const SizedBox(height: 7),
           _MessageMeta(message: message, color: foreground),
@@ -1006,20 +1018,33 @@ class _MessageBubble extends StatelessWidget {
       ),
     );
 
+    final interactiveBubble = switch ((failed && message.isMine, onDelete)) {
+      (true, _) => Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => context.read<ChatBloc>().add(
+            ChatRetryRequestedEvent(message.clientMessageId),
+          ),
+          onLongPress: onDelete,
+          customBorder: const StadiumBorder(),
+          child: bubble,
+        ),
+      ),
+      (false, final delete?) => Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onLongPress: delete,
+          onSecondaryTap: delete,
+          customBorder: const StadiumBorder(),
+          child: bubble,
+        ),
+      ),
+      _ => bubble,
+    };
+
     final constrained = ConstrainedBox(
       constraints: BoxConstraints(maxWidth: maxWidth),
-      child: failed && message.isMine
-          ? Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () => context.read<ChatBloc>().add(
-                  ChatRetryRequestedEvent(message.clientMessageId),
-                ),
-                customBorder: const StadiumBorder(),
-                child: bubble,
-              ),
-            )
-          : bubble,
+      child: interactiveBubble,
     );
 
     return TweenAnimationBuilder<double>(
@@ -1212,7 +1237,7 @@ class _MessageMeta extends StatelessWidget {
           TimeOfDay.fromDateTime(message.createdAt).format(context),
           style: context.textTheme.labelSmall?.copyWith(color: muted),
         ),
-        if (message.isMine) ...[
+        if (message.isMine && !message.isDeleted) ...[
           const SizedBox(width: 7),
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 140),

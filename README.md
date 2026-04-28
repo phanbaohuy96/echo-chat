@@ -117,8 +117,8 @@ Conflict rules stay explicit:
 - `client_message_id` reconciles optimistic local sends with server-confirmed rows.
 - `remote_id` deduplicates repeated remote syncs.
 - Server-confirmed rows are canonical for `sent` messages.
-- `updated_at`, `deleted_at`, and `version` are stored for future edit/delete policy.
-- Messages are still immutable in the current UI, so no merge UI is needed yet.
+- `updated_at`, `deleted_at`, and `version` sync message deletions while preserving ordering.
+- Deleted messages render as neutral placeholders without the original message text.
 
 Normal refresh stays small because it fetches only newer messages. Older history loads on demand when the user scrolls upward, and SQLite remains the final UI source of truth.
 
@@ -132,7 +132,7 @@ Presentation
 Domain
   ChatPeersUsecase        -> cached peers and peer sync
   ChatConversationUsecase -> cached conversations, refresh, older pages
-  ChatOutboxUsecase       -> queue, send, retry, outbox drain
+  ChatOutboxUsecase       -> queue, send, retry, delete, outbox drain
   ChatStorageUsecase      -> chat cache summary and clearing
 
 Data

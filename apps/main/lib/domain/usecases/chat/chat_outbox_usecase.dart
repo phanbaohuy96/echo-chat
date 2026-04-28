@@ -25,6 +25,9 @@ abstract class ChatOutboxUsecase {
   /// If [clientMessageId] is not found locally, this returns an empty list.
   Future<List<LocalChatMessage>> retryMessage(String clientMessageId);
 
+  /// Deletes one local or server-confirmed message and returns its cache.
+  Future<List<LocalChatMessage>> deleteMessage(String clientMessageId);
+
   /// Attempts to deliver one queued message and updates its local status.
   ///
   /// This is a no-op when the message is missing or no current user is stored

@@ -62,6 +62,37 @@ class ChatOutboxInteractorImpl extends ChatOutboxUsecase {
   }
 
   @override
+  Future<List<LocalChatMessage>> deleteMessage(String clientMessageId) async {
+    final localMessage = await _localRepository.getMessage(clientMessageId);
+    if (localMessage == null) {
+      return [];
+    }
+    if (localMessage.remoteId == null) {
+      await _localRepository.deleteLocalOnlyMessage(clientMessageId);
+      return _localRepository.getCachedConversation(
+        localMessage.conversationPeerUserId,
+      );
+    }
+
+    final currentUserId = _localDataManager.userInfo?.id;
+    if (currentUserId == null) {
+      return _localRepository.getCachedConversation(
+        localMessage.conversationPeerUserId,
+      );
+    }
+    final response = DeleteMessageResponse.fromJson(
+      await _appApiService.deleteChatMessage(localMessage.remoteId!),
+    );
+    await _localRepository.cacheRemoteMessage(
+      message: response.message,
+      currentUserId: currentUserId,
+    );
+    return _localRepository.getCachedConversation(
+      localMessage.conversationPeerUserId,
+    );
+  }
+
+  @override
   Future<void> syncQueuedMessage(String clientMessageId) async {
     final localMessage = await _localRepository.getMessage(clientMessageId);
     if (localMessage == null) {

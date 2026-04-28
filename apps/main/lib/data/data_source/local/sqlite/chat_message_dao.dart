@@ -160,6 +160,18 @@ class ChatMessageDao extends DAO {
     );
   }
 
+  Future<void> deleteLocalOnly(String clientMessageId) async {
+    await execute(
+      () => db.delete(
+        tableName,
+        where:
+            '${ChatMessageDao.clientMessageId} = ? AND '
+            '$remoteId IS NULL',
+        whereArgs: [clientMessageId],
+      ),
+    );
+  }
+
   Future<void> markPending(String clientMessageId) async {
     await execute(
       () => db.update(

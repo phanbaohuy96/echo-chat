@@ -95,6 +95,19 @@ class ChatLocalRepository {
     }
   }
 
+  Future<void> deleteLocalOnlyMessage(String clientMessageId) {
+    return _messageDao.deleteLocalOnly(clientMessageId);
+  }
+
+  Future<void> cacheRemoteMessage({
+    required ChatMessageDto message,
+    required String currentUserId,
+  }) {
+    return _messageDao.upsertRemoteMessages([
+      message,
+    ], currentUserId: currentUserId);
+  }
+
   Future<void> markSent({
     required String clientMessageId,
     required ChatMessageDto remoteMessage,

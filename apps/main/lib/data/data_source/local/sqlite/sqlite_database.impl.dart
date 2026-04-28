@@ -11,7 +11,7 @@ import 'data_access_object.dart';
 @Singleton(as: SQLiteDatabase)
 class SQLiteDatabaseImpl extends SQLiteDatabase {
   /// Version should be updated when database structure changed
-  int get version => 4;
+  int get version => 5;
 
   String get name => 'local.db';
 
@@ -48,6 +48,9 @@ class SQLiteDatabaseImpl extends SQLiteDatabase {
         }
         if (oldVersion < 4) {
           await _upgradeChatTablesToV4(db);
+        }
+        if (oldVersion < 5) {
+          await _upgradeChatTablesToV5(db);
         }
       },
       onDowngrade: (db, oldVersion, newVersion) async {
@@ -88,6 +91,15 @@ class SQLiteDatabaseImpl extends SQLiteDatabase {
       'INTEGER NOT NULL DEFAULT 1',
     );
     await db.execute(ChatConversationSyncDao.createTableQuery);
+  }
+
+  Future<void> _upgradeChatTablesToV5(Database db) async {
+    await _addColumnIfMissing(
+      db,
+      SqliteTable.chatConversationSync.name,
+      ChatConversationSyncDao.latestMessageUpdatedAt,
+      'INTEGER',
+    );
   }
 
   Future<void> _addColumnIfMissing(
