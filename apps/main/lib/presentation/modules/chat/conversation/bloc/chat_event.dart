@@ -20,6 +20,13 @@ class ChatRetryRequestedEvent extends ChatEvent {
   final String clientMessageId;
 }
 
+class ChatDeleteRequestedEvent extends ChatEvent {
+  ChatDeleteRequestedEvent(this.clientMessageId, this.completer);
+
+  final String clientMessageId;
+  final Completer<void> completer;
+}
+
 class ChatMessageSubmittedEvent extends ChatEvent {
   ChatMessageSubmittedEvent(this.message);
 

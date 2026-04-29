@@ -33,6 +33,7 @@ class AppApiService {
   Future<Map<String, dynamic>> getChatMessages(
     String peerUserId, {
     DateTime? afterCreatedAt,
+    DateTime? afterUpdatedAt,
     DateTime? beforeCreatedAt,
     int? limit,
   }) {
@@ -40,9 +41,16 @@ class AppApiService {
         .getChatMessages(
           peerUserId,
           afterCreatedAt?.toUtc().toIso8601String(),
+          afterUpdatedAt?.toUtc().toIso8601String(),
           beforeCreatedAt?.toUtc().toIso8601String(),
           limit,
         )
+        .then((value) => value as Map<String, dynamic>);
+  }
+
+  Future<Map<String, dynamic>> deleteChatMessage(String messageId) {
+    return restApi
+        .deleteChatMessage(messageId)
         .then((value) => value as Map<String, dynamic>);
   }
 

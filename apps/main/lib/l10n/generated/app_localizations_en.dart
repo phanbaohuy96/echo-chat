@@ -123,6 +123,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get failedTapToRetry => 'Failed. Tap to retry.';
 
   @override
+  String get deleteMessage => 'Delete message';
+
+  @override
+  String get deleteMessageConfirmation => 'Delete this message?';
+
+  @override
+  String get messageDeleted => 'Message deleted';
+
+  @override
   String get settings => 'Settings';
 
   @override

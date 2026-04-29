@@ -29,12 +29,16 @@ class ChatConversationResponse {
 class ChatConversationSyncMetadataDto {
   const ChatConversationSyncMetadataDto({
     this.latestMessageCreatedAt,
+    this.latestMessageUpdatedAt,
     this.oldestMessageCreatedAt,
     this.hasMoreOlder = false,
   });
 
   @JsonKey(name: 'latest_message_created_at')
   final DateTime? latestMessageCreatedAt;
+
+  @JsonKey(name: 'latest_message_updated_at')
+  final DateTime? latestMessageUpdatedAt;
 
   @JsonKey(name: 'oldest_message_created_at')
   final DateTime? oldestMessageCreatedAt;

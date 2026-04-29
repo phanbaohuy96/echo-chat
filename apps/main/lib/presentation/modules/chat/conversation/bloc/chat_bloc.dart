@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:core/core.dart';
 import 'package:data_source/data_source.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
@@ -25,6 +27,7 @@ class ChatBloc extends AppBlocBase<ChatEvent, ChatState> {
     on<ChatRefreshRequestedEvent>(_onChatRefreshRequestedEvent);
     on<ChatOlderMessagesRequestedEvent>(_onChatOlderMessagesRequestedEvent);
     on<ChatRetryRequestedEvent>(_onChatRetryRequestedEvent);
+    on<ChatDeleteRequestedEvent>(_onChatDeleteRequestedEvent);
     on<ChatMessageSubmittedEvent>(_onChatMessageSubmittedEvent);
   }
 
@@ -202,6 +205,26 @@ class ChatBloc extends AppBlocBase<ChatEvent, ChatState> {
       }
     } finally {
       _retryingMessageIds.remove(event.clientMessageId);
+    }
+  }
+
+  Future<void> _onChatDeleteRequestedEvent(
+    ChatDeleteRequestedEvent event,
+    Emitter<ChatState> emit,
+  ) async {
+    try {
+      final messages = await _chatOutboxUsecase.deleteMessage(
+        event.clientMessageId,
+      );
+      emit(
+        state.copyWith(
+          data: state.data.copyWith(messages: _mapMessages(messages)),
+        ),
+      );
+      event.completer.complete();
+    } catch (error, stackTrace) {
+      event.completer.completeError(error, stackTrace);
+      rethrow;
     }
   }
 

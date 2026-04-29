@@ -109,14 +109,18 @@ class FakeRestApiRepository implements RestApiRepository {
   Map<String, dynamic>? meResponse;
   Map<String, dynamic>? chatUsersResponse;
   Map<String, dynamic>? chatMessagesResponse;
+  Map<String, dynamic>? deleteChatMessageResponse;
   Map<String, dynamic>? sendChatMessageResponse;
   Error? meError;
+  Error? deleteChatMessageError;
   Error? sendChatMessageError;
   Map<String, dynamic>? lastSigninBody;
   Map<String, dynamic>? lastSignupBody;
   Map<String, dynamic>? lastSendChatMessageBody;
+  String? lastDeletedMessageId;
   String? lastChatMessagesPeerUserId;
   String? lastAfterCreatedAt;
+  String? lastAfterUpdatedAt;
   String? lastBeforeCreatedAt;
   int? lastChatMessagesLimit;
 
@@ -124,11 +128,13 @@ class FakeRestApiRepository implements RestApiRepository {
   Future<dynamic> getChatMessages(
     String peerUserId,
     String? afterCreatedAt,
+    String? afterUpdatedAt,
     String? beforeCreatedAt,
     int? limit,
   ) async {
     lastChatMessagesPeerUserId = peerUserId;
     lastAfterCreatedAt = afterCreatedAt;
+    lastAfterUpdatedAt = afterUpdatedAt;
     lastBeforeCreatedAt = beforeCreatedAt;
     lastChatMessagesLimit = limit;
     return chatMessagesResponse ??
@@ -137,6 +143,17 @@ class FakeRestApiRepository implements RestApiRepository {
           messages: [],
           syncMetadata: ChatConversationSyncMetadataDto(),
         ).toJson();
+  }
+
+  @override
+  Future<dynamic> deleteChatMessage(String messageId) async {
+    lastDeletedMessageId = messageId;
+    final error = deleteChatMessageError;
+    if (error != null) {
+      throw error;
+    }
+    return deleteChatMessageResponse ??
+        DeleteMessageResponse(message: messageDto(id: messageId)).toJson();
   }
 
   @override
@@ -189,14 +206,18 @@ class FakeChatLocalRepository implements ChatLocalRepository {
     failedMessageCount: 0,
   );
   bool cleared = false;
+  int deleteLocalOnlyMessageCount = 0;
   int markPendingCount = 0;
   int markSentCount = 0;
   int markFailedCount = 0;
   int cacheRemoteConversationCount = 0;
+  String? lastDeletedLocalOnlyClientMessageId;
   String? lastOutboxPeerUserId;
   String? lastMarkedFailedClientMessageId;
   String? lastMarkedFailedErrorMessage;
   String? lastMarkedSentClientMessageId;
+  ChatMessageDto? lastCachedRemoteMessage;
+  String? lastCachedRemoteMessageCurrentUserId;
   ChatMessageDto? lastMarkedSentRemoteMessage;
   String? lastMarkedSentCurrentUserId;
   ChatConversationResponse? lastCachedRemoteConversation;
@@ -320,9 +341,31 @@ class FakeChatLocalRepository implements ChatLocalRepository {
     syncs[peerUserId] = ChatConversationSync(
       peerUserId: peerUserId,
       latestMessageCreatedAt: syncMetadata.latestMessageCreatedAt,
+      latestMessageUpdatedAt: syncMetadata.latestMessageUpdatedAt,
       oldestMessageCreatedAt: syncMetadata.oldestMessageCreatedAt,
       hasMoreOlder: syncMetadata.hasMoreOlder,
     );
+  }
+
+  @override
+  Future<void> deleteLocalOnlyMessage(String clientMessageId) async {
+    deleteLocalOnlyMessageCount++;
+    lastDeletedLocalOnlyClientMessageId = clientMessageId;
+    messages.remove(clientMessageId);
+  }
+
+  @override
+  Future<void> cacheRemoteMessage({
+    required ChatMessageDto message,
+    required String currentUserId,
+  }) async {
+    lastCachedRemoteMessage = message;
+    lastCachedRemoteMessageCurrentUserId = currentUserId;
+    final localMessage = LocalChatMessage.fromRemote(
+      message,
+      currentUserId: currentUserId,
+    );
+    messages[localMessage.clientMessageId] = localMessage;
   }
 
   @override
@@ -433,6 +476,9 @@ ChatMessageDto messageDto({
   String clientMessageId = 'client-message',
   String message = 'Hello',
   DateTime? createdAt,
+  DateTime? updatedAt,
+  DateTime? deletedAt,
+  int version = 1,
 }) {
   return ChatMessageDto(
     id: id,
@@ -441,26 +487,37 @@ ChatMessageDto messageDto({
     clientMessageId: clientMessageId,
     message: message,
     createdAt: createdAt ?? DateTime(2026),
+    updatedAt: updatedAt,
+    deletedAt: deletedAt,
+    version: version,
   );
 }
 
 LocalChatMessage localMessage({
+  String? remoteId = 'remote-message',
   String clientMessageId = 'client-message',
   String conversationPeerUserId = 'peer',
   String senderUserId = 'current-user',
   String recipientUserId = 'peer',
   String message = 'Hello',
   DateTime? createdAt,
+  DateTime? updatedAt,
+  DateTime? deletedAt,
+  int version = 1,
   ChatMessageStatus status = ChatMessageStatus.sent,
   String? errorMessage,
 }) {
   return LocalChatMessage(
+    remoteId: remoteId,
     clientMessageId: clientMessageId,
     conversationPeerUserId: conversationPeerUserId,
     senderUserId: senderUserId,
     recipientUserId: recipientUserId,
     message: message,
     createdAt: createdAt ?? DateTime(2026),
+    updatedAt: updatedAt,
+    deletedAt: deletedAt,
+    version: version,
     status: status,
     errorMessage: errorMessage,
   );
@@ -468,6 +525,9 @@ LocalChatMessage localMessage({
 
 LocalChatMessage copyMessage(
   LocalChatMessage message, {
+  String? messageText,
+  DateTime? updatedAt,
+  DateTime? deletedAt,
   ChatMessageStatus? status,
   String? errorMessage,
 }) {
@@ -478,10 +538,10 @@ LocalChatMessage copyMessage(
     conversationPeerUserId: message.conversationPeerUserId,
     senderUserId: message.senderUserId,
     recipientUserId: message.recipientUserId,
-    message: message.message,
+    message: messageText ?? message.message,
     createdAt: message.createdAt,
-    updatedAt: message.updatedAt,
-    deletedAt: message.deletedAt,
+    updatedAt: updatedAt ?? message.updatedAt,
+    deletedAt: deletedAt ?? message.deletedAt,
     version: message.version,
     status: status ?? message.status,
     errorMessage: errorMessage,

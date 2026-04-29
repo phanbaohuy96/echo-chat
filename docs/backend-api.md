@@ -131,7 +131,8 @@ Returns a page of direct messages with a peer plus sync metadata. Without a curs
 
 Optional query parameters:
 
-- `after_created_at` — ISO timestamp or epoch milliseconds; returns messages newer than this cursor for delta refresh.
+- `after_created_at` — ISO timestamp or epoch milliseconds; returns messages created after this cursor.
+- `after_updated_at` — ISO timestamp or epoch milliseconds; returns messages created or updated after this cursor, including deleted messages.
 - `before_created_at` — ISO timestamp or epoch milliseconds; returns the older page before this cursor.
 - `limit` — page size, clamped by the backend.
 
@@ -159,6 +160,7 @@ Response `200`:
   ],
   "sync_metadata": {
     "latest_message_created_at": "2026-04-25T10:30:00.000Z",
+    "latest_message_updated_at": "2026-04-25T10:30:00.000Z",
     "oldest_message_created_at": "2026-04-25T10:30:00.000Z",
     "has_more_older": false
   }
@@ -208,3 +210,32 @@ Errors:
 - `400` invalid message, missing client message id, or self-chat
 - `401` missing or invalid token
 - `404` recipient not found
+
+### `DELETE /api/chat/messages/<message_id>`
+
+Deletes a direct message sent by the authenticated user. Deleted messages keep their server id and ordering metadata, but the message body is cleared and `deleted_at` is populated so clients can render a deleted-message placeholder.
+
+Response `200`:
+
+```json
+{
+  "message": {
+    "id": "msg_1",
+    "sender_user_id": "user_1",
+    "recipient_user_id": "user_2",
+    "client_message_id": "client_1",
+    "message": "",
+    "created_at": "2026-04-25T10:30:00.000Z",
+    "updated_at": "2026-04-25T10:35:00.000Z",
+    "deleted_at": "2026-04-25T10:35:00.000Z",
+    "version": 2
+  }
+}
+```
+
+Errors:
+
+- `400` missing message id
+- `401` missing or invalid token
+- `403` authenticated user is not the message sender
+- `404` message not found

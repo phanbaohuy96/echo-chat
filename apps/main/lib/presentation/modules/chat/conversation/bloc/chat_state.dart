@@ -62,6 +62,7 @@ class ChatMessage {
     required this.isMine,
     required this.createdAt,
     required this.status,
+    required this.isDeleted,
     this.localId,
     this.remoteId,
     this.errorMessage,
@@ -79,6 +80,7 @@ class ChatMessage {
       isMine: message.isMine(currentUserId),
       createdAt: message.createdAt,
       status: message.status,
+      isDeleted: message.deletedAt != null,
       errorMessage: message.errorMessage,
     );
   }
@@ -90,5 +92,6 @@ class ChatMessage {
   final bool isMine;
   final DateTime createdAt;
   final ChatMessageStatus status;
+  final bool isDeleted;
   final String? errorMessage;
 }

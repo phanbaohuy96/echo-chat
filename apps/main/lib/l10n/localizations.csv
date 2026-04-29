@@ -36,6 +36,9 @@ refresh,Refresh,Làm mới
 send,Send,Gửi
 sending,Sending...,Đang gửi...
 failedTapToRetry,Failed. Tap to retry.,Gửi thất bại. Nhấn để thử lại.
+deleteMessage,Delete message,Xóa tin nhắn
+deleteMessageConfirmation,Delete this message?,Xóa tin nhắn này?
+messageDeleted,Message deleted,Tin nhắn đã bị xóa
 settings,Settings,Cài đặt
 account,Account,Tài khoản
 language,Language,Ngôn ngữ

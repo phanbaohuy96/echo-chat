@@ -14,3 +14,13 @@ SendMessageResponse _$SendMessageResponseFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$SendMessageResponseToJson(
   SendMessageResponse instance,
 ) => <String, dynamic>{'message': instance.message.toJson()};
+
+DeleteMessageResponse _$DeleteMessageResponseFromJson(
+  Map<String, dynamic> json,
+) => DeleteMessageResponse(
+  message: ChatMessageDto.fromJson(json['message'] as Map<String, dynamic>),
+);
+
+Map<String, dynamic> _$DeleteMessageResponseToJson(
+  DeleteMessageResponse instance,
+) => <String, dynamic>{'message': instance.message.toJson()};

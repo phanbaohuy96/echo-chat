@@ -320,6 +320,24 @@ abstract class AppLocalizations {
   /// **'Failed. Tap to retry.'**
   String get failedTapToRetry;
 
+  /// No description provided for @deleteMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete message'**
+  String get deleteMessage;
+
+  /// No description provided for @deleteMessageConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this message?'**
+  String get deleteMessageConfirmation;
+
+  /// No description provided for @messageDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Message deleted'**
+  String get messageDeleted;
+
   /// No description provided for @settings.
   ///
   /// In en, this message translates to:

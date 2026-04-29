@@ -9,6 +9,7 @@ class ChatConversationResult {
     required this.peer,
     required this.messages,
     required this.latestMessageCreatedAt,
+    required this.latestMessageUpdatedAt,
     required this.oldestMessageCreatedAt,
     required this.hasMoreOlder,
   });
@@ -16,11 +17,15 @@ class ChatConversationResult {
   final BackendUser peer;
   final List<BackendChatMessage> messages;
   final DateTime? latestMessageCreatedAt;
+  final DateTime? latestMessageUpdatedAt;
   final DateTime? oldestMessageCreatedAt;
   final bool hasMoreOlder;
 
   Map<String, dynamic> get syncMetadata => {
     'latest_message_created_at': latestMessageCreatedAt
+        ?.toUtc()
+        .toIso8601String(),
+    'latest_message_updated_at': latestMessageUpdatedAt
         ?.toUtc()
         .toIso8601String(),
     'oldest_message_created_at': oldestMessageCreatedAt
@@ -55,19 +60,30 @@ class ChatService {
     required BackendUser user,
     required String peerUserId,
     DateTime? afterCreatedAt,
+    DateTime? afterUpdatedAt,
     DateTime? beforeCreatedAt,
     int? limit,
   }) {
     final peer = _getPeer(user: user, peerUserId: peerUserId);
     final conversationMessages = _conversationMessages(user.id, peer.id);
     final pageLimit = _normalizeLimit(limit);
-    final messages = switch ((afterCreatedAt, beforeCreatedAt)) {
-      (final after?, _) =>
+    final messages = switch ((
+      afterCreatedAt,
+      afterUpdatedAt,
+      beforeCreatedAt,
+    )) {
+      (_, final afterUpdate?, _) => _updatedPage(
         conversationMessages
-            .where((message) => message.createdAt.isAfter(after))
+            .where((message) => _messageUpdatedAt(message).isAfter(afterUpdate))
+            .toList(),
+        pageLimit,
+      ),
+      (final afterCreate?, null, _) =>
+        conversationMessages
+            .where((message) => message.createdAt.isAfter(afterCreate))
             .take(pageLimit)
             .toList(),
-      (null, final before?) => _latestPage(
+      (null, null, final before?) => _latestPage(
         conversationMessages
             .where((message) => message.createdAt.isBefore(before))
             .toList(),
@@ -84,12 +100,52 @@ class ChatService {
     return ChatConversationResult(
       peer: peer,
       messages: messages,
-      latestMessageCreatedAt: messages.isEmpty ? null : messages.last.createdAt,
+      latestMessageCreatedAt: _latestCreatedAt(messages),
+      latestMessageUpdatedAt: _latestUpdatedAt(messages),
       oldestMessageCreatedAt: messages.isEmpty
           ? null
           : messages.first.createdAt,
       hasMoreOlder: hasMoreOlder,
     );
+  }
+
+  BackendChatMessage deleteMessage({
+    required BackendUser user,
+    required String messageId,
+  }) {
+    final cleanMessageId = messageId.trim();
+    if (cleanMessageId.isEmpty) {
+      throw const ChatException(400, 'Message id is required.');
+    }
+
+    final existingMessage = _store.messagesById[cleanMessageId];
+    if (existingMessage == null) {
+      throw const ChatException(404, 'Message was not found.');
+    }
+    if (existingMessage.senderUserId != user.id) {
+      throw const ChatException(
+        403,
+        'Only the sender can delete this message.',
+      );
+    }
+    if (existingMessage.deletedAt != null) {
+      return existingMessage;
+    }
+
+    final now = DateTime.now().toUtc();
+    final deletedMessage = BackendChatMessage(
+      id: existingMessage.id,
+      senderUserId: existingMessage.senderUserId,
+      recipientUserId: existingMessage.recipientUserId,
+      clientMessageId: existingMessage.clientMessageId,
+      message: '',
+      createdAt: existingMessage.createdAt,
+      updatedAt: now,
+      deletedAt: now,
+      version: existingMessage.version + 1,
+    );
+    _store.messagesById[cleanMessageId] = deletedMessage;
+    return deletedMessage;
   }
 
   BackendChatMessage sendMessage({
@@ -156,6 +212,51 @@ class ChatService {
       return messages;
     }
     return messages.sublist(messages.length - limit);
+  }
+
+  List<BackendChatMessage> _updatedPage(
+    List<BackendChatMessage> messages,
+    int limit,
+  ) {
+    messages.sort((left, right) {
+      final updatedCompare = _messageUpdatedAt(
+        left,
+      ).compareTo(_messageUpdatedAt(right));
+      if (updatedCompare != 0) {
+        return updatedCompare;
+      }
+      final createdCompare = left.createdAt.compareTo(right.createdAt);
+      if (createdCompare != 0) {
+        return createdCompare;
+      }
+      return left.id.compareTo(right.id);
+    });
+    if (messages.length <= limit) {
+      return messages;
+    }
+    return messages.take(limit).toList();
+  }
+
+  DateTime _messageUpdatedAt(BackendChatMessage message) {
+    return message.updatedAt ?? message.createdAt;
+  }
+
+  DateTime? _latestCreatedAt(List<BackendChatMessage> messages) {
+    if (messages.isEmpty) {
+      return null;
+    }
+    return messages
+        .map((message) => message.createdAt)
+        .reduce((left, right) => left.isAfter(right) ? left : right);
+  }
+
+  DateTime? _latestUpdatedAt(List<BackendChatMessage> messages) {
+    if (messages.isEmpty) {
+      return null;
+    }
+    return messages
+        .map(_messageUpdatedAt)
+        .reduce((left, right) => left.isAfter(right) ? left : right);
   }
 
   int _normalizeLimit(int? limit) {

@@ -15,3 +15,15 @@ class SendMessageResponse {
 
   Map<String, dynamic> toJson() => _$SendMessageResponseToJson(this);
 }
+
+@JsonSerializable(explicitToJson: true)
+class DeleteMessageResponse {
+  const DeleteMessageResponse({required this.message});
+
+  final ChatMessageDto message;
+
+  factory DeleteMessageResponse.fromJson(Map<String, dynamic> json) =>
+      _$DeleteMessageResponseFromJson(json);
+
+  Map<String, dynamic> toJson() => _$DeleteMessageResponseToJson(this);
+}

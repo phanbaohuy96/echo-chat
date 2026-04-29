@@ -30,9 +30,13 @@ abstract class RestApiRepository {
   Future<dynamic> getChatMessages(
     @Query('peer_user_id') String peerUserId,
     @Query('after_created_at') String? afterCreatedAt,
+    @Query('after_updated_at') String? afterUpdatedAt,
     @Query('before_created_at') String? beforeCreatedAt,
     @Query('limit') int? limit,
   );
+
+  @DELETE('${ApiContract.chatMessages}/{message_id}')
+  Future<dynamic> deleteChatMessage(@Path('message_id') String messageId);
 
   @POST(ApiContract.chatMessages)
   Future<dynamic> sendChatMessage(@Body() Map<String, dynamic> body);

@@ -109,6 +109,7 @@ class _RestApiRepository implements RestApiRepository {
   Future<dynamic> getChatMessages(
     String peerUserId,
     String? afterCreatedAt,
+    String? afterUpdatedAt,
     String? beforeCreatedAt,
     int? limit,
   ) async {
@@ -116,6 +117,7 @@ class _RestApiRepository implements RestApiRepository {
     final queryParameters = <String, dynamic>{
       r'peer_user_id': peerUserId,
       r'after_created_at': afterCreatedAt,
+      r'after_updated_at': afterUpdatedAt,
       r'before_created_at': beforeCreatedAt,
       r'limit': limit,
     };
@@ -127,6 +129,27 @@ class _RestApiRepository implements RestApiRepository {
           .compose(
             _dio.options,
             '/api/chat/messages',
+            queryParameters: queryParameters,
+            data: _data,
+          )
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch(_options);
+    final _value = _result.data;
+    return _value;
+  }
+
+  @override
+  Future<dynamic> deleteChatMessage(String messageId) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<dynamic>(
+      Options(method: 'DELETE', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            '/api/chat/messages/${messageId}',
             queryParameters: queryParameters,
             data: _data,
           )

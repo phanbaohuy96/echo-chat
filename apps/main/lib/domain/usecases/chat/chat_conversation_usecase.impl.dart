@@ -54,7 +54,10 @@ class ChatConversationInteractorImpl extends ChatConversationUsecase {
     final response = ChatConversationResponse.fromJson(
       await _appApiService.getChatMessages(
         peerUserId,
-        afterCreatedAt: sync?.latestMessageCreatedAt ?? fallbackNewest,
+        afterUpdatedAt:
+            sync?.latestMessageUpdatedAt ??
+            sync?.latestMessageCreatedAt ??
+            fallbackNewest,
       ),
     );
     await _localRepository.cacheRemoteConversation(

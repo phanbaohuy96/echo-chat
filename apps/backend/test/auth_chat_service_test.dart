@@ -337,6 +337,217 @@ void main() {
       expect(conversation.messages, hasLength(1));
     });
 
+    test('deletes a sender message with updated deleted state', () {
+      final jane = authService.signup(
+        name: 'Jane Doe',
+        username: 'jane',
+        password: 'secret123',
+      );
+      final bob = authService.signup(
+        name: 'Bob Doe',
+        username: 'bob',
+        password: 'secret123',
+      );
+      final sentMessage = chatService.sendMessage(
+        sender: jane.user,
+        recipientUserId: bob.user.id,
+        clientMessageId: 'jane-1',
+        message: 'Hello Bob',
+      );
+
+      final deletedMessage = chatService.deleteMessage(
+        user: jane.user,
+        messageId: sentMessage.id,
+      );
+
+      expect(deletedMessage.id, sentMessage.id);
+      expect(deletedMessage.message, isEmpty);
+      expect(deletedMessage.deletedAt, isNotNull);
+      expect(deletedMessage.updatedAt, deletedMessage.deletedAt);
+      expect(deletedMessage.version, 2);
+    });
+
+    test('delete is idempotent for already deleted messages', () {
+      final jane = authService.signup(
+        name: 'Jane Doe',
+        username: 'jane',
+        password: 'secret123',
+      );
+      final bob = authService.signup(
+        name: 'Bob Doe',
+        username: 'bob',
+        password: 'secret123',
+      );
+      final sentMessage = chatService.sendMessage(
+        sender: jane.user,
+        recipientUserId: bob.user.id,
+        clientMessageId: 'jane-1',
+        message: 'Hello Bob',
+      );
+
+      final firstDelete = chatService.deleteMessage(
+        user: jane.user,
+        messageId: sentMessage.id,
+      );
+      final secondDelete = chatService.deleteMessage(
+        user: jane.user,
+        messageId: sentMessage.id,
+      );
+
+      expect(secondDelete.deletedAt, firstDelete.deletedAt);
+      expect(secondDelete.version, firstDelete.version);
+    });
+
+    test('rejects deleting another sender message', () {
+      final jane = authService.signup(
+        name: 'Jane Doe',
+        username: 'jane',
+        password: 'secret123',
+      );
+      final bob = authService.signup(
+        name: 'Bob Doe',
+        username: 'bob',
+        password: 'secret123',
+      );
+      final sentMessage = chatService.sendMessage(
+        sender: jane.user,
+        recipientUserId: bob.user.id,
+        clientMessageId: 'jane-1',
+        message: 'Hello Bob',
+      );
+
+      expect(
+        () => chatService.deleteMessage(
+          user: bob.user,
+          messageId: sentMessage.id,
+        ),
+        throwsA(
+          isA<ChatException>().having(
+            (error) => error.statusCode,
+            'statusCode',
+            403,
+          ),
+        ),
+      );
+    });
+
+    test('returns deleted messages after an updated cursor', () {
+      final jane = authService.signup(
+        name: 'Jane Doe',
+        username: 'jane',
+        password: 'secret123',
+      );
+      final bob = authService.signup(
+        name: 'Bob Doe',
+        username: 'bob',
+        password: 'secret123',
+      );
+      final sentMessage = chatService.sendMessage(
+        sender: jane.user,
+        recipientUserId: bob.user.id,
+        clientMessageId: 'jane-1',
+        message: 'Hello Bob',
+      );
+      final initialConversation = chatService.getConversation(
+        user: bob.user,
+        peerUserId: jane.user.id,
+      );
+
+      chatService.deleteMessage(user: jane.user, messageId: sentMessage.id);
+      final updatedConversation = chatService.getConversation(
+        user: bob.user,
+        peerUserId: jane.user.id,
+        afterUpdatedAt: initialConversation.latestMessageUpdatedAt,
+      );
+
+      expect(updatedConversation.messages, hasLength(1));
+      expect(updatedConversation.messages.single.id, sentMessage.id);
+      expect(updatedConversation.messages.single.deletedAt, isNotNull);
+    });
+
+    test('pages updated messages by updated time', () async {
+      final jane = authService.signup(
+        name: 'Jane Doe',
+        username: 'jane',
+        password: 'secret123',
+      );
+      final bob = authService.signup(
+        name: 'Bob Doe',
+        username: 'bob',
+        password: 'secret123',
+      );
+      final firstMessage = chatService.sendMessage(
+        sender: jane.user,
+        recipientUserId: bob.user.id,
+        clientMessageId: 'jane-1',
+        message: 'First',
+      );
+      final secondMessage = chatService.sendMessage(
+        sender: jane.user,
+        recipientUserId: bob.user.id,
+        clientMessageId: 'jane-2',
+        message: 'Second',
+      );
+      final initialConversation = chatService.getConversation(
+        user: bob.user,
+        peerUserId: jane.user.id,
+      );
+
+      chatService.deleteMessage(user: jane.user, messageId: secondMessage.id);
+      await Future<void>.delayed(const Duration(milliseconds: 1));
+      chatService.deleteMessage(user: jane.user, messageId: firstMessage.id);
+      final updatedConversation = chatService.getConversation(
+        user: bob.user,
+        peerUserId: jane.user.id,
+        afterUpdatedAt: initialConversation.latestMessageUpdatedAt,
+        limit: 1,
+      );
+
+      expect(updatedConversation.messages.single.id, secondMessage.id);
+      expect(
+        updatedConversation.latestMessageUpdatedAt,
+        updatedConversation.messages.single.updatedAt,
+      );
+    });
+
+    test('rejects missing delete message ids', () {
+      final jane = authService.signup(
+        name: 'Jane Doe',
+        username: 'jane',
+        password: 'secret123',
+      );
+
+      expect(
+        () => chatService.deleteMessage(user: jane.user, messageId: '   '),
+        throwsA(
+          isA<ChatException>().having(
+            (error) => error.statusCode,
+            'statusCode',
+            400,
+          ),
+        ),
+      );
+    });
+
+    test('rejects deleting missing messages', () {
+      final jane = authService.signup(
+        name: 'Jane Doe',
+        username: 'jane',
+        password: 'secret123',
+      );
+
+      expect(
+        () => chatService.deleteMessage(user: jane.user, messageId: 'missing'),
+        throwsA(
+          isA<ChatException>().having(
+            (error) => error.statusCode,
+            'statusCode',
+            404,
+          ),
+        ),
+      );
+    });
+
     test('rejects empty messages', () {
       final jane = authService.signup(
         name: 'Jane Doe',

@@ -60,6 +60,24 @@ extension ChatAction on _ChatScreenState {
     _setShowMobileConversation(false);
   }
 
+  Future<void> _confirmDeleteMessage(ChatMessage message) async {
+    final confirmed = await showNoticeConfirmDialog(
+      context: context,
+      title: l10n.deleteMessage,
+      message: l10n.deleteMessageConfirmation,
+      leftBtn: l10n.cancel,
+      rightBtn: l10n.deleteMessage,
+      styleRightBtn: TextStyle(color: context.themeColor.error),
+    );
+    if (!confirmed) {
+      return;
+    }
+
+    final completer = Completer<void>();
+    bloc.add(ChatDeleteRequestedEvent(message.clientMessageId, completer));
+    await completer.future;
+  }
+
   void _send() {
     final message = _controller.text.trim();
     if (message.isEmpty ||

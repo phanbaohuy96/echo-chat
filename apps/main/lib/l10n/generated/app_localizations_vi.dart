@@ -125,6 +125,15 @@ class AppLocalizationsVi extends AppLocalizations {
   String get failedTapToRetry => 'Gửi thất bại. Nhấn để thử lại.';
 
   @override
+  String get deleteMessage => 'Xóa tin nhắn';
+
+  @override
+  String get deleteMessageConfirmation => 'Xóa tin nhắn này?';
+
+  @override
+  String get messageDeleted => 'Tin nhắn đã bị xóa';
+
+  @override
   String get settings => 'Cài đặt';
 
   @override

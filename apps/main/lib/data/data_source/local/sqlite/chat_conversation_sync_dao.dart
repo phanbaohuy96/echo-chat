@@ -11,6 +11,7 @@ class ChatConversationSyncDao extends DAO {
 
   static const peerUserId = 'peer_user_id';
   static const latestMessageCreatedAt = 'latest_message_created_at';
+  static const latestMessageUpdatedAt = 'latest_message_updated_at';
   static const oldestMessageCreatedAt = 'oldest_message_created_at';
   static const hasMoreOlder = 'has_more_older';
   static const lastSyncedAt = 'last_synced_at';
@@ -23,6 +24,7 @@ class ChatConversationSyncDao extends DAO {
     CREATE TABLE IF NOT EXISTS ${SqliteTable.chatConversationSync.name} (
       $peerUserId TEXT PRIMARY KEY NOT NULL,
       $latestMessageCreatedAt INTEGER,
+      $latestMessageUpdatedAt INTEGER,
       $oldestMessageCreatedAt INTEGER,
       $hasMoreOlder INTEGER NOT NULL DEFAULT 1,
       $lastSyncedAt INTEGER
@@ -36,6 +38,7 @@ class ChatConversationSyncDao extends DAO {
   List<DataColumn> get columns => [
     DataColumn(name: peerUserId, type: DataType.text, isPrimary: true),
     DataColumn(name: latestMessageCreatedAt, type: DataType.int),
+    DataColumn(name: latestMessageUpdatedAt, type: DataType.int),
     DataColumn(name: oldestMessageCreatedAt, type: DataType.int),
     DataColumn(name: hasMoreOlder, type: DataType.int, notNull: true),
     DataColumn(name: lastSyncedAt, type: DataType.int),
@@ -67,6 +70,12 @@ class ChatConversationSyncDao extends DAO {
       existing?.latestMessageCreatedAt,
       metadata.latestMessageCreatedAt ?? fallbackLatestCreatedAt,
     );
+    final latestUpdated = _maxDateTime(
+      existing?.latestMessageUpdatedAt,
+      metadata.latestMessageUpdatedAt ??
+          metadata.latestMessageCreatedAt ??
+          fallbackLatestCreatedAt,
+    );
     final oldest = _minDateTime(
       existing?.oldestMessageCreatedAt,
       metadata.oldestMessageCreatedAt ?? fallbackOldestCreatedAt,
@@ -81,6 +90,7 @@ class ChatConversationSyncDao extends DAO {
     final values = {
       ChatConversationSyncDao.peerUserId: peerUserId,
       latestMessageCreatedAt: latest?.millisecondsSinceEpoch,
+      latestMessageUpdatedAt: latestUpdated?.millisecondsSinceEpoch,
       oldestMessageCreatedAt: oldest?.millisecondsSinceEpoch,
       hasMoreOlder:
           (preserveExistingOlderState
@@ -105,10 +115,15 @@ class ChatConversationSyncDao extends DAO {
   }) async {
     final existing = await getSync(peerUserId);
     final latest = _maxDateTime(existing?.latestMessageCreatedAt, createdAt);
+    final latestUpdated = _maxDateTime(
+      existing?.latestMessageUpdatedAt,
+      createdAt,
+    );
     final oldest = _minDateTime(existing?.oldestMessageCreatedAt, createdAt);
     final values = {
       ChatConversationSyncDao.peerUserId: peerUserId,
       latestMessageCreatedAt: latest?.millisecondsSinceEpoch,
+      latestMessageUpdatedAt: latestUpdated?.millisecondsSinceEpoch,
       oldestMessageCreatedAt: oldest?.millisecondsSinceEpoch,
       hasMoreOlder: (existing?.hasMoreOlder ?? true) ? 1 : 0,
       lastSyncedAt: DateTime.now().millisecondsSinceEpoch,
@@ -131,6 +146,7 @@ class ChatConversationSyncDao extends DAO {
     return ChatConversationSync(
       peerUserId: row[peerUserId] as String,
       latestMessageCreatedAt: _fromMilliseconds(row[latestMessageCreatedAt]),
+      latestMessageUpdatedAt: _fromMilliseconds(row[latestMessageUpdatedAt]),
       oldestMessageCreatedAt: _fromMilliseconds(row[oldestMessageCreatedAt]),
       hasMoreOlder: (row[hasMoreOlder] as int) == 1,
       lastSyncedAt: _fromMilliseconds(row[lastSyncedAt]),
