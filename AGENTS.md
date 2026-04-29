@@ -95,6 +95,16 @@ These generic agent rules come before implementation details. For the full check
 3. **Surgical changes**: every changed line should trace to the request or required generated output. Do not refactor adjacent code, reformat unrelated files, or delete unrelated dead code unless asked.
 4. **Goal-driven execution**: for multi-step work, define success criteria before coding, then verify with concrete checks such as `rg`, generation commands, analyzer, tests, backend tests, or UI smoke tests.
 
+## Spec-Driven Development
+
+- Use `specs/README.md` as the workflow source of truth and `specs/template.md` for new feature specs.
+- For non-trivial feature work, create or update a spec under `specs/features/` before implementation.
+- Do not implement a `Draft` spec unless the user explicitly approves proceeding; move approved work to `Approved` or `Implementing` as appropriate.
+- Keep specs short and implementation-facing: define behavior, scope, UX/API/data contracts, architecture mapping, acceptance criteria, and verification.
+- Implement against the spec boundaries and update the spec when product or technical decisions change during the work.
+- Check off acceptance criteria and verification steps as they pass; mark a spec `Verified` only after relevant automated checks and manual smoke testing are complete.
+- If the user says “do it” for SDD work, make the concrete safe repository changes instead of only describing the workflow.
+
 ## Generalized implementation guidance
 
 - When the user names an existing architecture or pattern, follow that structure directly; ask before substituting a lighter-weight shortcut.

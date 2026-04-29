@@ -1,10 +1,8 @@
 # EchoChat Claude Instructions
 
-## Project identity
+Shared coding-agent guidance lives in [AGENTS.md](AGENTS.md). Follow it for EchoChat architecture, implementation patterns, spec-driven development, code generation, localization, testing, and repository-specific conventions.
 
-EchoChat is a demo chat monorepo created from the Flutter core template. The template is only the starting point; do not make changes outside this repository for EchoChat work.
-
-## Repository rules
+## Claude Code rules
 
 - Work from `/Users/huy.phan/personal/projects/Flutter/EchoChat`.
 - Do not edit the template project unless the user explicitly asks.
@@ -14,57 +12,4 @@ EchoChat is a demo chat monorepo created from the Flutter core template. The tem
   - Flutter client: `apps/main/.env`
   - Dart Frog backend: `apps/backend/.env`
 - Keep `.env.example` files safe and non-secret.
-
-## Architecture rules
-
-- `apps/main` is the Flutter client.
-- `apps/backend` is the Dart Frog backend.
-- `core` contains reusable Flutter/client infrastructure.
-- `modules/data_source` contains shared client-side data models and DTOs.
-- `plugins/*` contains reusable Flutter packages from the template.
-
-## Spec-Driven Development rules
-
-- Use `specs/README.md` as the workflow source of truth and `specs/template.md` for new feature specs.
-- For non-trivial feature work, create or update a spec under `specs/features/` before implementation.
-- Do not implement a `Draft` spec unless the user explicitly approves proceeding; move approved work to `Approved` or `Implementing` as appropriate.
-- Keep specs short and implementation-facing: define behavior, scope, UX/API/data contracts, architecture mapping, acceptance criteria, and verification.
-- Implement against the spec boundaries and update the spec when product or technical decisions change during the work.
-- Check off acceptance criteria and verification steps as they pass; mark a spec `Verified` only after relevant automated checks and manual smoke testing are complete.
-- If the user says “do it” for SDD work, make the concrete safe repository changes instead of only describing the workflow.
-
-## Flutter rules
-
-- Follow feature folders under `apps/main/lib/presentation/modules/<feature>`.
-- Use BLoC/Freezed for non-trivial screen state.
-- Register app routes through `IRoute` classes and `RouteGenerator`.
-- Use coordinator extensions on `BuildContext` for feature navigation.
-- Keep domain orchestration in `apps/main/lib/domain/usecases`.
-- Use `LocalDataManager` for token/user persistence.
-- Put shared API DTOs in `modules/data_source`.
-- Put Retrofit endpoint declarations in `core/lib/data/data_source/remote/repository/rest_api_repository/rest_api_repository.dart`.
-- Add AppApiService wrappers in `core/lib/data/data_source/remote/app_api_service.dart`.
-- Reuse theme helpers such as `context.theme`, `themeColor`, and template widgets before hardcoding styles.
-- Use localization for stable user-facing copy when a feature moves beyond demo-only text.
-
-## Backend rules
-
-- Keep Dart Frog business logic in services under `apps/backend/lib/src/services`.
-- Keep route handlers thin; validate input, call services, return responses.
-- Use in-memory storage for v1 demo only.
-- Keep token/auth checks centralized in backend auth helpers/services.
-- Do not expose backend secrets to the Flutter client.
-
-## Code generation
-
-Run code generation after editing Freezed, Injectable, JsonSerializable, or Retrofit files:
-
-- `make gen_data_source`
-- `make gen_core`
-- `make gen_main`
-
-If backend code later uses codegen, add a backend-specific target instead of silently folding it into Flutter generation.
-
-## Verification expectations
-
-For frontend changes, run the app and manually exercise the feature before reporting completion. For EchoChat, verify signup, signin, navigation to chat, and sending a chat message against the local backend.
+- Prefer the project-standard commands listed in `AGENTS.md` for setup, generation, localization, formatting, and tests.
