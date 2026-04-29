@@ -4,7 +4,6 @@ Shared coding-agent guidance lives in [AGENTS.md](AGENTS.md). Follow it for Echo
 
 ## Claude Code rules
 
-- Work from `/Users/huy.phan/personal/projects/Flutter/EchoChat`.
 - Do not edit the template project unless the user explicitly asks.
 - Do not commit changes unless the user explicitly asks for a commit.
 - Never commit `.env`, credentials, tokens, keystores, or generated secrets.
